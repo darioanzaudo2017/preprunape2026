@@ -262,7 +262,7 @@ export default function ConfigPage() {
     if (!term) return true
     return (
       u.display_name?.toLowerCase().includes(term) ||
-      u.rol.toLowerCase().includes(term) ||
+      u.rol?.toLowerCase().includes(term) ||
       u.Localidad?.toLowerCase().includes(term)
     )
   })
