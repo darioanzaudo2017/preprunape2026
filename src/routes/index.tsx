@@ -14,7 +14,7 @@ import MapaPage from '../pages/Mapa'
 import InstitucionesPage from '../pages/Instituciones'
 import InstitucionDetailPage from '../pages/InstitucionDetail'
 import DashboardIndicadoresPage from '../pages/DashboardIndicadores'
-import { LayoutDashboard, Users, FileSpreadsheet, MapPin, Building2, LogOut, HeartPulse, ShieldCheck, Settings, Network, BarChart2 } from 'lucide-react'
+import { LayoutDashboard, Users, MapPin, LogOut, HeartPulse, ShieldCheck, Settings, Network, BarChart2 } from 'lucide-react'
 
 // ProtectedRoute Component
 function ProtectedRoute() {

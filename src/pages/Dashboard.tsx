@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useUserRole } from '../hooks/useUserRole'
@@ -7,14 +7,9 @@ import { supabase } from '../lib/supabase'
 import {
   Users,
   CheckCircle2,
-  AlertTriangle,
   Clock,
-  TrendingUp,
   Award,
-  Building2,
-  Calendar,
   Layers,
-  ChevronRight,
   Plus,
   BarChart3,
   MapPin,

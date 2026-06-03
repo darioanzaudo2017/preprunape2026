@@ -616,6 +616,271 @@ export interface Database {
         }
         Relationships: []
       }
+      seguimiento_prunape: {
+        Row: {
+          id: number
+          created_at: string
+          id_nino: number
+          resultado: string
+          fecha: string
+          observacion: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          id?: number
+          created_at?: string
+          id_nino: number
+          resultado: string
+          fecha: string
+          observacion?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          id?: number
+          created_at?: string
+          id_nino?: number
+          resultado?: string
+          fecha?: string
+          observacion?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seguimiento_prunape_id_nino_fkey"
+            columns: ["id_nino"]
+            referencedRelation: "niños"
+            referencedColumns: ["idninos"]
+          }
+        ]
+      }
+      hogar: {
+        Row: {
+          id: number
+          barrio: string | null
+          localidad: string | null
+          tipo_barrio: string | null
+          tipo_hogar: string | null
+          jefatura: string | null
+          cant_personas: number | null
+          id_adulto_jefe: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          barrio?: string | null
+          localidad?: string | null
+          tipo_barrio?: string | null
+          tipo_hogar?: string | null
+          jefatura?: string | null
+          cant_personas?: number | null
+          id_adulto_jefe?: number | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          barrio?: string | null
+          localidad?: string | null
+          tipo_barrio?: string | null
+          tipo_hogar?: string | null
+          jefatura?: string | null
+          cant_personas?: number | null
+          id_adulto_jefe?: number | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hogar_id_adulto_jefe_fkey"
+            columns: ["id_adulto_jefe"]
+            referencedRelation: "adultos"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      hogar_ninos: {
+        Row: {
+          id: number
+          id_hogar: number
+          id_nino: number
+          fecha_ingreso: string
+          fecha_egreso: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          id_hogar: number
+          id_nino: number
+          fecha_ingreso: string
+          fecha_egreso?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          id_hogar?: number
+          id_nino?: number
+          fecha_ingreso?: string
+          fecha_egreso?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hogar_ninos_id_hogar_fkey"
+            columns: ["id_hogar"]
+            referencedRelation: "hogar"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "hogar_ninos_id_nino_fkey"
+            columns: ["id_nino"]
+            referencedRelation: "niños"
+            referencedColumns: ["idninos"]
+          }
+        ]
+      }
+      hogar_snapshot: {
+        Row: {
+          id: number
+          id_hogar: number
+          fecha: string
+          nivel_educativo_jefe: string | null
+          situacion_ocupacional: string | null
+          escala_ingresos: string | null
+          recibe_transferencias_estado: boolean | null
+          tipo_transferencias: Json | null
+          cobertura_salud: string | null
+          tipo_vivienda: string | null
+          condicion_tenencia: string | null
+          material_piso: string | null
+          cant_ambientes: number | null
+          hacinamiento: string | null
+          agua: string | null
+          saneamiento: string | null
+          electricidad: string | null
+          combustible_coccion: string | null
+          tiene_internet: boolean | null
+          tiene_red_apoyo: boolean | null
+          tipo_red_apoyo: Json | null
+          participa_organizacion: boolean | null
+          tipo_organizacion: Json | null
+          nbi_count: number | null
+          observaciones: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          id_hogar: number
+          fecha?: string
+          nivel_educativo_jefe?: string | null
+          situacion_ocupacional?: string | null
+          escala_ingresos?: string | null
+          recibe_transferencias_estado?: boolean | null
+          tipo_transferencias?: Json | null
+          cobertura_salud?: string | null
+          tipo_vivienda?: string | null
+          condicion_tenencia?: string | null
+          material_piso?: string | null
+          cant_ambientes?: number | null
+          hacinamiento?: string | null
+          agua?: string | null
+          saneamiento?: string | null
+          electricidad?: string | null
+          combustible_coccion?: string | null
+          tiene_internet?: boolean | null
+          tiene_red_apoyo?: boolean | null
+          tipo_red_apoyo?: Json | null
+          participa_organizacion?: boolean | null
+          tipo_organizacion?: Json | null
+          nbi_count?: number | null
+          observaciones?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          id_hogar?: number
+          fecha?: string
+          nivel_educativo_jefe?: string | null
+          situacion_ocupacional?: string | null
+          escala_ingresos?: string | null
+          recibe_transferencias_estado?: boolean | null
+          tipo_transferencias?: Json | null
+          cobertura_salud?: string | null
+          tipo_vivienda?: string | null
+          condicion_tenencia?: string | null
+          material_piso?: string | null
+          cant_ambientes?: number | null
+          hacinamiento?: string | null
+          agua?: string | null
+          saneamiento?: string | null
+          electricidad?: string | null
+          combustible_coccion?: string | null
+          tiene_internet?: boolean | null
+          tiene_red_apoyo?: boolean | null
+          tipo_red_apoyo?: Json | null
+          participa_organizacion?: boolean | null
+          tipo_organizacion?: Json | null
+          nbi_count?: number | null
+          observaciones?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "hogar_snapshot_id_hogar_fkey"
+            columns: ["id_hogar"]
+            referencedRelation: "hogar"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      mapa_servicios_con_coords: {
+        Row: {
+          id: number
+          id_instituciones: number | null
+          wkt: string | null
+          nombre: string | null
+          nombre_de_la_entidad: string | null
+          institucion: string | null
+          departamento: string | null
+          localidad: string | null
+          denominacion_barrial: string | null
+          domicilio: string | null
+          categoria: string | null
+          servicio: string | null
+          latitud: number | null
+          longitud: number | null
+        }
+        Insert: {
+          id?: number
+          id_instituciones?: number | null
+          wkt?: string | null
+          nombre?: string | null
+          nombre_de_la_entidad?: string | null
+          institucion?: string | null
+          departamento?: string | null
+          localidad?: string | null
+          denominacion_barrial?: string | null
+          domicilio?: string | null
+          categoria?: string | null
+          servicio?: string | null
+          latitud?: number | null
+          longitud?: number | null
+        }
+        Update: {
+          id?: number
+          id_instituciones?: number | null
+          wkt?: string | null
+          nombre?: string | null
+          nombre_de_la_entidad?: string | null
+          institucion?: string | null
+          departamento?: string | null
+          localidad?: string | null
+          denominacion_barrial?: string | null
+          domicilio?: string | null
+          categoria?: string | null
+          servicio?: string | null
+          latitud?: number | null
+          longitud?: number | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

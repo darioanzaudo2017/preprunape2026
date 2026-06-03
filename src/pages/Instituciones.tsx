@@ -11,13 +11,6 @@ import {
   Navigation,
   X,
   ExternalLink,
-  Globe,
-  Users,
-  BookOpen,
-  Briefcase,
-  Layers,
-  Heart,
-  Mail,
   Compass
 } from 'lucide-react'
 
@@ -68,8 +61,7 @@ export default function InstitucionesPage() {
   const [localidadFilterServicios, setLocalidadFilterServicios] = useState('')
   const [tipoFilterServicios, setTipoFilterServicios] = useState('')
 
-  // Selected institution for detail modal
-  const [selectedPI, setSelectedPI] = useState<any | null>(null)
+
 
   // Fetch institutions
   const { data: instituciones, isLoading: isLoadingPI } = useQuery({

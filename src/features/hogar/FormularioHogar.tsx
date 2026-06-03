@@ -3,7 +3,24 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { hogarSchema, type HogarSchemaType } from './hogarSchema';
 import { useHogar } from './useHogar';
-import type { FormularioHogarData, Hacinamiento } from './hogar.types';
+import type {
+  FormularioHogarData,
+  Hacinamiento,
+  TipoHogar,
+  JefaturaHogar,
+  TipoBarrio,
+  NivelEducativoJefe,
+  SituacionOcupacional,
+  EscalaIngresos,
+  CoberturaSalud,
+  TipoVivienda,
+  CondicionTenencia,
+  MaterialPiso,
+  AccesoAgua,
+  Saneamiento,
+  Electricidad,
+  CombustibleCoccion
+} from './hogar.types';
 import { Button } from '../../components/ui/button';
 import {
   Home,
@@ -15,7 +32,6 @@ import {
   ArrowLeft,
   Save,
   Loader2,
-  Info,
   Users,
   CheckCircle2,
   AlertTriangle,
@@ -80,33 +96,33 @@ export function FormularioHogar({ idNino, onSuccess, onClose }: FormularioHogarP
   useEffect(() => {
     if (hogarData) {
       reset({
-        tipo_hogar: hogarData.hogar?.tipo_hogar || 'nuclear',
-        jefatura: hogarData.hogar?.jefatura || 'compartida',
+        tipo_hogar: (hogarData.hogar?.tipo_hogar || 'nuclear') as TipoHogar,
+        jefatura: (hogarData.hogar?.jefatura || 'compartida') as JefaturaHogar,
         cant_personas: hogarData.hogar?.cant_personas || 4,
         barrio: hogarData.hogar?.barrio || '',
         localidad: hogarData.hogar?.localidad || '',
-        tipo_barrio: hogarData.hogar?.tipo_barrio || 'formal',
+        tipo_barrio: (hogarData.hogar?.tipo_barrio || 'formal') as TipoBarrio,
         id_adulto_jefe: hogarData.hogar?.id_adulto_jefe || null,
-        nivel_educativo_jefe: hogarData.snapshot?.nivel_educativo_jefe || 'secundario_completo',
-        situacion_ocupacional: hogarData.snapshot?.situacion_ocupacional || 'formal',
-        escala_ingresos: hogarData.snapshot?.escala_ingresos || 'entre_1_2_sml',
+        nivel_educativo_jefe: (hogarData.snapshot?.nivel_educativo_jefe || 'secundario_completo') as NivelEducativoJefe,
+        situacion_ocupacional: (hogarData.snapshot?.situacion_ocupacional || 'formal') as SituacionOcupacional,
+        escala_ingresos: (hogarData.snapshot?.escala_ingresos || 'entre_1_2_sml') as EscalaIngresos,
         recibe_transferencias_estado: hogarData.snapshot?.recibe_transferencias_estado || false,
-        tipo_transferencias: hogarData.snapshot?.tipo_transferencias || [],
-        cobertura_salud: hogarData.snapshot?.cobertura_salud || 'obra_social',
-        tipo_vivienda: hogarData.snapshot?.tipo_vivienda || 'casa',
-        condicion_tenencia: hogarData.snapshot?.condicion_tenencia || 'propietario',
-        material_piso: hogarData.snapshot?.material_piso || 'ceramico_mosaico',
+        tipo_transferencias: (hogarData.snapshot?.tipo_transferencias as string[]) || [],
+        cobertura_salud: (hogarData.snapshot?.cobertura_salud || 'obra_social') as CoberturaSalud,
+        tipo_vivienda: (hogarData.snapshot?.tipo_vivienda || 'casa') as TipoVivienda,
+        condicion_tenencia: (hogarData.snapshot?.condicion_tenencia || 'propietario') as CondicionTenencia,
+        material_piso: (hogarData.snapshot?.material_piso || 'ceramico_mosaico') as MaterialPiso,
         cant_ambientes: hogarData.snapshot?.cant_ambientes || 3,
-        hacinamiento: hogarData.snapshot?.hacinamiento || 'sin_hacinamiento',
-        agua: hogarData.snapshot?.agua || 'red_publica',
-        saneamiento: hogarData.snapshot?.saneamiento || 'red_cloacal',
-        electricidad: hogarData.snapshot?.electricidad || 'con_medidor',
-        combustible_coccion: hogarData.snapshot?.combustible_coccion || 'gas_red',
+        hacinamiento: (hogarData.snapshot?.hacinamiento || 'sin_hacinamiento') as Hacinamiento,
+        agua: (hogarData.snapshot?.agua || 'red_publica') as AccesoAgua,
+        saneamiento: (hogarData.snapshot?.saneamiento || 'red_cloacal') as Saneamiento,
+        electricidad: (hogarData.snapshot?.electricidad || 'con_medidor') as Electricidad,
+        combustible_coccion: (hogarData.snapshot?.combustible_coccion || 'gas_red') as CombustibleCoccion,
         tiene_internet: hogarData.snapshot?.tiene_internet || false,
         tiene_red_apoyo: hogarData.snapshot?.tiene_red_apoyo || false,
-        tipo_red_apoyo: hogarData.snapshot?.tipo_red_apoyo || [],
+        tipo_red_apoyo: (hogarData.snapshot?.tipo_red_apoyo as string[]) || [],
         participa_organizacion: hogarData.snapshot?.participa_organizacion || false,
-        tipo_organizacion: hogarData.snapshot?.tipo_organizacion || [],
+        tipo_organizacion: (hogarData.snapshot?.tipo_organizacion as string[]) || [],
         observaciones: hogarData.snapshot?.observaciones || ''
       });
     }
@@ -562,42 +578,45 @@ export function FormularioHogar({ idNino, onSuccess, onClose }: FormularioHogarP
                     <Controller
                       name="tipo_transferencias"
                       control={control}
-                      render={({ field }) => (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                          {[
-                            { value: 'auh_alimentar', label: 'AUH / Tarjeta Alimentar' },
-                            { value: 'jubilacion', label: 'Jubilación mínima' },
-                            { value: 'pension', label: 'Pensión No Contributiva (PNC / discapacidad)' },
-                            { value: 'beca', label: 'Beca Progresar / Estudiantil' },
-                            { value: 'potenciar', label: 'Potenciar Trabajo / Empleo social' },
-                            { value: 'otro', label: 'Otro tipo de asistencia municipal/provincial' }
-                          ].map((t) => (
-                            <label
-                              key={t.value}
-                              className={`flex items-center gap-2.5 p-3 border rounded-xl cursor-pointer select-none transition-all ${
-                                field.value.includes(t.value)
-                                  ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                                  : 'border-slate-200 hover:bg-slate-50 bg-white'
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                value={t.value}
-                                checked={field.value.includes(t.value)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    field.onChange([...field.value, t.value]);
-                                  } else {
-                                    field.onChange(field.value.filter((v: string) => v !== t.value));
-                                  }
-                                }}
-                                className="h-4.5 w-4.5 rounded border-slate-300 text-primary focus:ring-primary"
-                              />
-                              <span className="text-xs font-bold text-slate-700">{t.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
+                      render={({ field }) => {
+                        const currentValues = field.value || [];
+                        return (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            {[
+                              { value: 'auh_alimentar', label: 'AUH / Tarjeta Alimentar' },
+                              { value: 'jubilacion', label: 'Jubilación mínima' },
+                              { value: 'pension', label: 'Pensión No Contributiva (PNC / discapacidad)' },
+                              { value: 'beca', label: 'Beca Progresar / Estudiantil' },
+                              { value: 'potenciar', label: 'Potenciar Trabajo / Empleo social' },
+                              { value: 'otro', label: 'Otro tipo de asistencia municipal/provincial' }
+                            ].map((t) => (
+                              <label
+                                key={t.value}
+                                className={`flex items-center gap-2.5 p-3 border rounded-xl cursor-pointer select-none transition-all ${
+                                  currentValues.includes(t.value)
+                                    ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                                    : 'border-slate-200 hover:bg-slate-50 bg-white'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  value={t.value}
+                                  checked={currentValues.includes(t.value)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      field.onChange([...currentValues, t.value]);
+                                    } else {
+                                      field.onChange(currentValues.filter((v: string) => v !== t.value));
+                                    }
+                                  }}
+                                  className="h-4.5 w-4.5 rounded border-slate-300 text-primary focus:ring-primary"
+                                />
+                                <span className="text-xs font-bold text-slate-700">{t.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        );
+                      }}
                     />
                   </div>
                 )}
@@ -995,39 +1014,42 @@ export function FormularioHogar({ idNino, onSuccess, onClose }: FormularioHogarP
                     <Controller
                       name="tipo_red_apoyo"
                       control={control}
-                      render={({ field }) => (
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          {[
-                            { value: 'familiar', label: 'Apoyo Familiar (abuelos, tíos, hermanos)' },
-                            { value: 'vecinal', label: 'Apoyo Vecinal / Amigos cercanos' },
-                            { value: 'institucional', label: 'Apoyo Institucional (CAPS, acción social, etc.)' }
-                          ].map((t) => (
-                            <label
-                              key={t.value}
-                              className={`flex items-center gap-2.5 p-3 border rounded-xl cursor-pointer select-none transition-all ${
-                                field.value.includes(t.value)
-                                  ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                                  : 'border-slate-200 hover:bg-slate-50 bg-white'
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                value={t.value}
-                                checked={field.value.includes(t.value)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    field.onChange([...field.value, t.value]);
-                                  } else {
-                                    field.onChange(field.value.filter((v: string) => v !== t.value));
-                                  }
-                                }}
-                                className="h-4.5 w-4.5 rounded border-slate-300 text-primary focus:ring-primary"
-                              />
-                              <span className="text-xs font-bold text-slate-700">{t.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
+                      render={({ field }) => {
+                        const currentValues = field.value || [];
+                        return (
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {[
+                              { value: 'familiar', label: 'Apoyo Familiar (abuelos, tíos, hermanos)' },
+                              { value: 'vecinal', label: 'Apoyo Vecinal / Amigos cercanos' },
+                              { value: 'institucional', label: 'Apoyo Institucional (CAPS, acción social, etc.)' }
+                            ].map((t) => (
+                              <label
+                                key={t.value}
+                                className={`flex items-center gap-2.5 p-3 border rounded-xl cursor-pointer select-none transition-all ${
+                                  currentValues.includes(t.value)
+                                    ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                                    : 'border-slate-200 hover:bg-slate-50 bg-white'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  value={t.value}
+                                  checked={currentValues.includes(t.value)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      field.onChange([...currentValues, t.value]);
+                                    } else {
+                                      field.onChange(currentValues.filter((v: string) => v !== t.value));
+                                    }
+                                  }}
+                                  className="h-4.5 w-4.5 rounded border-slate-300 text-primary focus:ring-primary"
+                                />
+                                <span className="text-xs font-bold text-slate-700">{t.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        );
+                      }}
                     />
                   </div>
                 )}
@@ -1068,42 +1090,45 @@ export function FormularioHogar({ idNino, onSuccess, onClose }: FormularioHogarP
                     <Controller
                       name="tipo_organizacion"
                       control={control}
-                      render={({ field }) => (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
-                          {[
-                            { value: 'comedor', label: 'Comedor comunitario / Copa de leche' },
-                            { value: 'club', label: 'Club social / deportivo' },
-                            { value: 'cooperativa', label: 'Cooperativa de trabajo / microemprendimiento' },
-                            { value: 'iglesia', label: 'Iglesia / Grupo religioso' },
-                            { value: 'centro_vecinal', label: 'Centro vecinal o sociedad de fomento' },
-                            { value: 'otro', label: 'Otras agrupaciones' }
-                          ].map((t) => (
-                            <label
-                              key={t.value}
-                              className={`flex items-center gap-2.5 p-3 border rounded-xl cursor-pointer select-none transition-all ${
-                                field.value.includes(t.value)
-                                  ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                                  : 'border-slate-200 hover:bg-slate-50 bg-white'
-                              }`}
-                            >
-                              <input
-                                type="checkbox"
-                                value={t.value}
-                                checked={field.value.includes(t.value)}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    field.onChange([...field.value, t.value]);
-                                  } else {
-                                    field.onChange(field.value.filter((v: string) => v !== t.value));
-                                  }
-                                }}
-                                className="h-4.5 w-4.5 rounded border-slate-300 text-primary focus:ring-primary"
-                              />
-                              <span className="text-xs font-bold text-slate-700">{t.label}</span>
-                            </label>
-                          ))}
-                        </div>
-                      )}
+                      render={({ field }) => {
+                        const currentValues = field.value || [];
+                        return (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                            {[
+                              { value: 'comedor', label: 'Comedor comunitario / Copa de leche' },
+                              { value: 'club', label: 'Club social / deportivo' },
+                              { value: 'cooperativa', label: 'Cooperativa de trabajo / microemprendimiento' },
+                              { value: 'iglesia', label: 'Iglesia / Grupo religioso' },
+                              { value: 'centro_vecinal', label: 'Centro vecinal o sociedad de fomento' },
+                              { value: 'otro', label: 'Otras agrupaciones' }
+                            ].map((t) => (
+                              <label
+                                key={t.value}
+                                className={`flex items-center gap-2.5 p-3 border rounded-xl cursor-pointer select-none transition-all ${
+                                  currentValues.includes(t.value)
+                                    ? 'border-primary bg-primary/5 ring-1 ring-primary'
+                                    : 'border-slate-200 hover:bg-slate-50 bg-white'
+                                }`}
+                              >
+                                <input
+                                  type="checkbox"
+                                  value={t.value}
+                                  checked={currentValues.includes(t.value)}
+                                  onChange={(e) => {
+                                    if (e.target.checked) {
+                                      field.onChange([...currentValues, t.value]);
+                                    } else {
+                                      field.onChange(currentValues.filter((v: string) => v !== t.value));
+                                    }
+                                  }}
+                                  className="h-4.5 w-4.5 rounded border-slate-300 text-primary focus:ring-primary"
+                                />
+                                <span className="text-xs font-bold text-slate-700">{t.label}</span>
+                              </label>
+                            ))}
+                          </div>
+                        );
+                      }}
                     />
                   </div>
                 )}

@@ -1,5 +1,4 @@
 import { useState, useMemo } from 'react'
-import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useUserRole } from '../hooks/useUserRole'
@@ -30,7 +29,6 @@ import {
   TrendingDown,
   Info,
   MapPin,
-  ClipboardCheck,
   Stethoscope
 } from 'lucide-react'
 
@@ -83,7 +81,7 @@ const BAR_COLOR_PRIMARY = '#6366f1' // Indigo
 const BAR_COLOR_SECONDARY = '#0d9488' // Teal
 
 export default function DashboardIndicadoresPage() {
-  const { rol, isAgente, localidad: userLocalidad } = useUserRole()
+  const { isAgente, localidad: userLocalidad } = useUserRole()
 
   // 1. Global Filter States
   const [fechaDesde, setFechaDesde] = useState<string>('')
@@ -93,7 +91,7 @@ export default function DashboardIndicadoresPage() {
   const [pCategoria, setPCategoria] = useState<string>('')
 
   // Resolve locality dynamically based on role/isAgente
-  const activeLocalidad = isAgente ? userLocalidad : pLocalidad
+  const activeLocalidad = (isAgente ? userLocalidad : pLocalidad) || ''
 
   // Table pagination state
   const [currentPage, setCurrentPage] = useState(1)
@@ -174,7 +172,7 @@ export default function DashboardIndicadoresPage() {
         p_genero: pGenero || null
       })
       if (error) throw error
-      return (data || []).sort((a, b) => a.orden - b.orden)
+      return (data || []).sort((a: RangoEtarioRow, b: RangoEtarioRow) => a.orden - b.orden)
     }
   })
 

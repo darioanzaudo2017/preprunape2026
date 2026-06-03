@@ -14,14 +14,12 @@ import {
   Navigation,
   Search,
   X,
-  ExternalLink,
   Globe,
   Users,
   BookOpen,
   Briefcase,
   Layers,
   Heart,
-  Calendar,
   Map
 } from 'lucide-react'
 
@@ -72,43 +70,46 @@ function LogoImage({ src, alt }: { src?: string | null; alt: string }) {
 
 export default function InstitucionDetailPage() {
   const { id } = useParams<{ id: string }>()
+  const idNum = id ? parseInt(id, 10) : undefined
   const [searchTerm, setSearchTerm] = useState('')
 
   // Fetch individual institution details
   const { data: institucion, isLoading: isLoadingPI, error: piError } = useQuery({
-    queryKey: ['institucion', id],
+    queryKey: ['institucion', idNum],
     queryFn: async () => {
+      if (idNum === undefined || isNaN(idNum)) throw new Error('ID inválido')
       const { data, error } = await supabase
         .from('institucionesredPI')
         .select('*')
-        .eq('id', id)
+        .eq('id', idNum)
         .single()
       if (error) throw error
       return data
     },
-    enabled: !!id
+    enabled: idNum !== undefined && !isNaN(idNum)
   })
 
   // Fetch all related points of service (mapa_servicios) linked by FK
   const { data: servicios, isLoading: isLoadingServicios } = useQuery<MapaServicioView[]>({
-    queryKey: ['institucion-servicios', id],
+    queryKey: ['institucion-servicios', idNum],
     queryFn: async () => {
+      if (idNum === undefined || isNaN(idNum)) throw new Error('ID inválido')
       const { data, error } = await supabase
         .from('mapa_servicios_con_coords')
         .select('*')
-        .eq('id_instituciones', id)
+        .eq('id_instituciones', idNum)
       if (error) {
         console.warn('Error fetching view coords, falling back to table:', error)
         const { data: tableData, error: tableError } = await supabase
           .from('mapa_servicios')
           .select('*')
-          .eq('id_instituciones', id)
+          .eq('id_instituciones', idNum)
         if (tableError) throw tableError
         return tableData || []
       }
       return data || []
     },
-    enabled: !!id
+    enabled: idNum !== undefined && !isNaN(idNum)
   })
 
   // Client-side search within the list of related service points

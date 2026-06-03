@@ -10,7 +10,7 @@ import { Loader2, Stethoscope, ClipboardList, TrendingUp } from 'lucide-react'
 // Zod validation schema matching RHF
 const seguimientoSchema = z.object({
   resultado: z.enum(['Pasó', 'No pasó'], {
-    errorMap: () => ({ message: 'El resultado es requerido' })
+    message: 'El resultado es requerido'
   }),
   fecha: z.string().min(1, 'La fecha es requerida'),
   observacion: z.string().max(500, 'Máximo 500 caracteres').optional(),
@@ -25,7 +25,7 @@ interface SeguimientoRow {
   resultado: 'Pasó' | 'No pasó'
   fecha: string
   observacion: string | null
-  usuario_id: string
+  usuario_id: string | null
 }
 
 interface SeguimientoPrunapeProps {
@@ -48,7 +48,7 @@ export default function SeguimientoPrunape({ idNino, mode = 'both' }: Seguimient
         .eq('id_nino', idNino)
         .order('fecha', { ascending: false })
       if (error) throw error
-      return data || []
+      return (data || []) as SeguimientoRow[]
     }
   })
 
@@ -233,7 +233,7 @@ export default function SeguimientoPrunape({ idNino, mode = 'both' }: Seguimient
             </div>
           ) : (
             <div className="relative border-l-2 border-slate-100 ml-4 pl-6 space-y-6 py-2">
-              {seguimientos.map((item) => {
+              {seguimientos.map((item: SeguimientoRow) => {
                 const isPaso = item.resultado === 'Pasó'
                 const dotColor = isPaso 
                   ? 'bg-emerald-500 ring-emerald-100' 
@@ -301,7 +301,7 @@ export default function SeguimientoPrunape({ idNino, mode = 'both' }: Seguimient
           </div>
         ) : (
           <div className="relative border-l-2 border-slate-100 ml-4 pl-6 space-y-6 py-2">
-            {seguimientos.map((item) => {
+            {seguimientos.map((item: SeguimientoRow) => {
               const isPaso = item.resultado === 'Pasó'
               const dotColor = isPaso 
                 ? 'bg-emerald-500 ring-emerald-100' 

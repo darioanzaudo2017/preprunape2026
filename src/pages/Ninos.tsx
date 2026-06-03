@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuthStore } from '../store/authStore'
 import { useUserRole } from '../hooks/useUserRole'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
@@ -31,14 +30,10 @@ interface Ninya {
 
 export default function NinosPage() {
   const navigate = useNavigate()
-  const { user } = useAuthStore()
   const { rol, isAgente, localidad, displayName } = useUserRole()
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [soloAlerta, setSoloAlerta] = useState(false)
-
-  // Extract practitioner name dynamically
-  const userName = displayName || user?.user_metadata?.display_name || user?.email?.split('@')[0] || 'Usuario'
 
   console.log('NinosPage: Render called with state:', { rol, localidad, isAgente, displayName })
 

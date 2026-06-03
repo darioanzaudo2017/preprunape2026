@@ -189,7 +189,7 @@ export default function NinoDetailPage() {
 
       const { data, error } = await supabase
         .from('niños')
-        .select('idninos, dni, nombre, Direccion, Localidad, Telefonocontacto, adultoresponsable, fecha_nacimiento, genero, pesoNac, prematuro, semanas, fecha_nac_real, otras_características, idAdulto')
+        .select('*')
         .eq('idninos', idninos)
         .single()
 
