@@ -830,6 +830,40 @@ export interface Database {
           }
         ]
       }
+      encuesta_tokens: {
+        Row: {
+          id: number
+          id_nino: number
+          token: string
+          usado: boolean
+          expires_at: string
+          created_at: string
+        }
+        Insert: {
+          id?: number
+          id_nino: number
+          token?: string
+          usado?: boolean
+          expires_at?: string
+          created_at?: string
+        }
+        Update: {
+          id?: number
+          id_nino?: number
+          token?: string
+          usado?: boolean
+          expires_at?: string
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "encuesta_tokens_id_nino_fkey"
+            columns: ["id_nino"]
+            referencedRelation: "niños"
+            referencedColumns: ["idninos"]
+          }
+        ]
+      }
       mapa_servicios_con_coords: {
         Row: {
           id: number

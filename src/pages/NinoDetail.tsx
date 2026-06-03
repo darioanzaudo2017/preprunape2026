@@ -21,7 +21,8 @@ import {
   Loader2,
   Save,
   X,
-  Home
+  Home,
+  Link2
 } from 'lucide-react'
 import SeguimientoPrunape from '../components/SeguimientoPrunape'
 import { FormularioHogar, useHogar } from '../features/hogar'
@@ -116,14 +117,248 @@ function calculateAge(birthDateStr: string, testDateStr: string): string {
   }
 }
 
+type ResultadoFila = {
+  pregunta_texto: string
+  pregunta_categoria: string
+  respuesta_texto: string
+  resultado: string
+}
+
+interface Pregunta2 {
+  id_pregunta: number
+  texto_pregunta: string
+  Categoria: string
+  [key: string]: any
+}
+
+// Helper to calculate exact age in months at the moment of the test.
+function calculateAgeInMonths(birthDateStr: string, testDateStr: string): number {
+  const [by, bm, bd] = birthDateStr.split('-').map(Number)
+  const [ty, tm, td] = testDateStr.split('-').map(Number)
+  if (!by || !ty) return 0
+
+  let months = (ty - by) * 12 + (tm - bm)
+  if (td < bd) months--
+  return Math.max(0, months)
+}
+
+// Calculate age as (months * 30 + days) matching Postgres AGE() logic:
+function calculateAgeInDays(birthDateStr: string, testDateStr: string): number {
+  const [by, bm, bd] = birthDateStr.split('-').map(Number)
+  const [ty, tm, td] = testDateStr.split('-').map(Number)
+  if (!by || !ty) return 0
+
+  let months = (ty - by) * 12 + (tm - bm)
+  let days = td - bd
+  if (days < 0) {
+    months--
+    const prevMonth = tm === 1 ? 12 : tm - 1
+    const prevYear = tm === 1 ? ty - 1 : ty
+    const daysInPrevMonth = new Date(prevYear, prevMonth, 0).getDate()
+    days += daysInPrevMonth
+  }
+  return Math.max(0, months * 30 + days)
+}
+
 export default function NinoDetailPage() {
   const { id } = useParams<{ id: string }>()
   const idninos = Number(id)
   const queryClient = useQueryClient()
 
+  // Evaluation Detail Modal and Selection
+  const [selectedPruebaId, setSelectedPruebaId] = useState<number | null>(null)
+
+  // Fetch detailed answers for the selected evaluation
+  const { data: detailData, isLoading: isLoadingDetail } = useQuery({
+    queryKey: ['prueba-detalle', selectedPruebaId],
+    enabled: selectedPruebaId !== null,
+    queryFn: async () => {
+      if (selectedPruebaId === null) return null
+
+      // 1. Fetch the test record
+      const { data: prueba, error: pruebaError } = await supabase
+        .from('Prueba_pre_prunape')
+        .select('*')
+        .eq('id_prueba', selectedPruebaId)
+        .single()
+
+      if (pruebaError) throw pruebaError
+      if (!prueba) return null
+
+      // 2. Fetch the config for this form
+      const { data: config } = await supabase
+        .from('config_formularios')
+        .select('*')
+        .eq('formulario', prueba.formulario || '')
+        .single()
+
+      const umbral = config?.max_no_pasa ?? 2
+
+      // 3. Call the evaluation RPC
+      const { data: rpcData, error: rpcError } = await (supabase as any)
+        .rpc('ejecutar_consulta_prueba', {
+          p_id_prueba: selectedPruebaId,
+          form: prueba.formulario || '',
+          p_umbral: umbral
+        })
+
+      if (rpcError) throw rpcError
+
+      // 4. Fetch questions for this form
+      const formNum = (prueba.formulario || 'Formulario 1').split(' ')[1] || '1'
+      const orderColumn = `numero_form${formNum}`
+      const { data: preguntas, error: preguntasError } = await supabase
+        .from('preguntas2')
+        .select('*')
+        .eq(prueba.formulario || '', true)
+        .order(orderColumn as any, { ascending: true })
+
+      if (preguntasError) throw preguntasError
+
+      // 5. Fetch all intervals
+      const { data: intervalos, error: intervalosError } = await supabase
+        .from('intervalosevaluacion')
+        .select('*')
+        .eq('Formulario', prueba.formulario || '')
+
+      if (intervalosError) throw intervalosError
+
+      const birthDateStr = prueba.fechanacimiento || ''
+      const testDateStr = prueba.Fecha || ''
+      
+      const edadMeses = calculateAgeInMonths(birthDateStr, testDateStr)
+      const edadDias = calculateAgeInDays(birthDateStr, testDateStr)
+
+      const parseEdadToDays = (edadStr: string): number => {
+        const mMatch = edadStr.match(/(\d+)m/)
+        const dMatch = edadStr.match(/(\d+)d/)
+        const months = mMatch ? parseInt(mMatch[1]) : 0
+        const days = dMatch ? parseInt(dMatch[1]) : 0
+        return months * 30 + days
+      }
+
+      const intervaloActivo = (intervalos || []).find(row => {
+        const min = parseEdadToDays(row['Edad Mínima'] ?? '')
+        const max = parseEdadToDays(row['Edad Máxima'] ?? '')
+        return edadDias >= min && edadDias <= max
+      }) ?? null
+
+      const preguntasValidasIds = new Set<number>((intervaloActivo?.['Pregunta de Evaluación'] ?? []).map(Number))
+
+      // Normalize Aprobado and Observacion fields
+      let rawAprobado = String(prueba.Aprobado || 'No Evaluado').trim()
+      let aprobado = 'No Evaluado'
+      if (['aprobado', 'sí', 'si', 'yes', 'true'].includes(rawAprobado.toLowerCase())) {
+        aprobado = 'Aprobado'
+      } else if (['no aprobado', 'no'].includes(rawAprobado.toLowerCase())) {
+        aprobado = 'No Aprobado'
+      } else if (rawAprobado.toLowerCase() === 'no evaluado') {
+        aprobado = 'No Evaluado'
+      } else {
+        aprobado = rawAprobado
+      }
+
+      const normalizedPrueba = {
+        ...prueba,
+        aprobado,
+        observacion: prueba.Observacion || prueba.observacion || 'Sin observación registrada.'
+      }
+
+      return {
+        prueba: normalizedPrueba,
+        resultados: (rpcData || []) as ResultadoFila[],
+        preguntas: (preguntas || []) as Pregunta2[],
+        preguntasValidasIds,
+        edadMeses,
+        edadDias,
+        edadCalculada: birthDateStr && testDateStr ? calculateAge(birthDateStr, testDateStr) : 'Sin datos'
+      }
+    }
+  })
+
+  // Delete Evaluation Mutation
+  const deletePruebaMutation = useMutation({
+    mutationFn: async (idPrueba: number) => {
+      // First, delete answers associated with this evaluation in pregunta_list
+      const { error: answersError } = await supabase
+        .from('pregunta_list')
+        .delete()
+        .eq('id_ingresoform', idPrueba)
+      if (answersError) throw answersError
+
+      // Then delete the evaluation itself
+      const { error: pruebaError } = await supabase
+        .from('Prueba_pre_prunape')
+        .delete()
+        .eq('id_prueba', idPrueba)
+      if (pruebaError) throw pruebaError
+    },
+    onSuccess: () => {
+      toast.success('¡Evaluación eliminada con éxito!')
+      queryClient.invalidateQueries({ queryKey: ['pruebas', id] })
+    },
+    onError: (err: any) => {
+      console.error(err)
+      toast.error(err.message || 'Error al eliminar la evaluación.')
+    }
+  })
+
+  const handleDeletePrueba = (idPrueba: number) => {
+    if (window.confirm('¿Está seguro de que desea eliminar esta evaluación y todas sus respuestas?')) {
+      deletePruebaMutation.mutate(idPrueba)
+    }
+  }
+
   // Hogar hook and modal state
   const [isHogarModalOpen, setIsHogarModalOpen] = useState(false)
   const { hogarData, isLoading: isLoadingHogar } = useHogar(idninos)
+
+  // Link generation state
+  const [isGeneratingLink, setIsGeneratingLink] = useState(false)
+
+  const handleGenerateSurveyLink = async () => {
+    setIsGeneratingLink(true)
+    try {
+      const { data: existingToken, error: checkError } = await supabase
+        .from('encuesta_tokens')
+        .select('token, expires_at, usado')
+        .eq('id_nino', idninos)
+        .eq('usado', false)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+
+      if (checkError) throw checkError
+
+      let token = ''
+      if (existingToken) {
+        const expDate = new Date(existingToken.expires_at)
+        if (expDate > new Date()) {
+          token = existingToken.token
+        }
+      }
+
+      if (!token) {
+        const { data: newToken, error: insertError } = await supabase
+          .from('encuesta_tokens')
+          .insert({ id_nino: idninos })
+          .select('token')
+          .single()
+
+        if (insertError) throw insertError
+        token = newToken.token
+      }
+
+      const url = `${window.location.origin}/encuesta/${token}`
+      await navigator.clipboard.writeText(url)
+      toast.success('¡Link copiado! Válido por 7 días. Enviáselo al adulto responsable.')
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || 'Error al generar el link de la encuesta.')
+    } finally {
+      setIsGeneratingLink(false)
+    }
+  }
 
   // Edit Modal States - Niño
   const [isEditing, setIsEditing] = useState(false)
@@ -697,13 +932,20 @@ export default function NinoDetailPage() {
                     <td className="px-6 py-4 text-xs text-on-surface-variant max-w-[200px] truncate" title={prueba.observacion}>
                       {prueba.observacion}
                     </td>
-                    <td className="px-6 py-4">
+                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-3">
-                        <button className="flex items-center gap-1 px-4 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-on-primary rounded-full transition-all active:scale-95 text-xs font-semibold">
+                        <button
+                          onClick={() => setSelectedPruebaId(prueba.id_prueba)}
+                          className="flex items-center gap-1 px-4 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-on-primary rounded-full transition-all active:scale-95 text-xs font-semibold"
+                        >
                           <Eye className="h-3.5 w-3.5" />
                           Ver Detalle
                         </button>
-                        <button className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-full transition-colors">
+                        <button
+                          onClick={() => handleDeletePrueba(prueba.id_prueba)}
+                          disabled={deletePruebaMutation.isPending}
+                          className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50"
+                        >
                           <Trash2 className="h-4 w-4" />
                         </button>
                       </div>
@@ -759,13 +1001,27 @@ export default function NinoDetailPage() {
                   No se han registrado datos de vivienda, educación ni servicios básicos para este hogar. Completar este módulo ayuda a identificar condiciones de vulnerabilidad o necesidades de apoyo.
                 </p>
               </div>
-              <button
-                onClick={() => setIsHogarModalOpen(true)}
-                className="shrink-0 px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all flex items-center gap-2"
-              >
-                <Plus className="h-4.5 w-4.5" />
-                Registrar Datos del Hogar
-              </button>
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                <button
+                  onClick={handleGenerateSurveyLink}
+                  disabled={isGeneratingLink}
+                  className="px-5 py-2.5 border border-primary text-primary hover:bg-primary/5 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                >
+                  {isGeneratingLink ? (
+                    <Loader2 className="h-4.5 w-4.5 animate-spin" />
+                  ) : (
+                    <Link2 className="h-4.5 w-4.5" />
+                  )}
+                  Generar link para el adulto responsable
+                </button>
+                <button
+                  onClick={() => setIsHogarModalOpen(true)}
+                  className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-sm font-bold rounded-xl shadow-sm transition-all flex items-center justify-center gap-2"
+                >
+                  <Plus className="h-4.5 w-4.5" />
+                  Registrar Datos del Hogar
+                </button>
+              </div>
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm space-y-6">
@@ -779,13 +1035,27 @@ export default function NinoDetailPage() {
                     Última actualización: {hogarData.snapshot?.fecha ? new Date(hogarData.snapshot.fecha).toLocaleDateString('es-AR') : 'Sin fecha'}
                   </p>
                 </div>
-                <button
-                  onClick={() => setIsHogarModalOpen(true)}
-                  className="px-4 py-2 border border-primary text-primary hover:bg-primary/5 text-sm font-bold rounded-xl transition-all flex items-center gap-2 self-start sm:self-auto"
-                >
-                  <Edit className="h-4 w-4" />
-                  Actualizar Datos
-                </button>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 self-start sm:self-auto">
+                  <button
+                    onClick={handleGenerateSurveyLink}
+                    disabled={isGeneratingLink}
+                    className="px-4 py-2 border border-slate-300 text-slate-600 hover:bg-slate-50 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isGeneratingLink ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Link2 className="h-4 w-4" />
+                    )}
+                    Generar link para el adulto responsable
+                  </button>
+                  <button
+                    onClick={() => setIsHogarModalOpen(true)}
+                    className="px-4 py-2 border border-primary text-primary hover:bg-primary/5 text-sm font-bold rounded-xl transition-all flex items-center justify-center gap-2"
+                  >
+                    <Edit className="h-4 w-4" />
+                    Actualizar Datos
+                  </button>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -1266,6 +1536,162 @@ export default function NinoDetailPage() {
                     <Save className="h-4 w-4" /> Guardar Cambios
                   </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Evaluation Detail Modal */}
+      {selectedPruebaId !== null && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[90vh] flex flex-col overflow-hidden text-on-surface">
+            {/* Modal Header */}
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+              <div className="flex items-center gap-3">
+                <ClipboardList className="h-6 w-6 text-primary" />
+                <div>
+                  <h3 className="text-lg font-bold text-on-surface font-display">Detalle de la Evaluación</h3>
+                  <p className="text-xs text-slate-400 mt-0.5 font-bold">
+                    Paciente: {nino?.nombre} {nino?.apellido}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedPruebaId(null)}
+                className="p-1.5 hover:bg-slate-200 rounded-full transition-colors"
+              >
+                <X className="h-5 w-5 text-slate-500" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+              {isLoadingDetail ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-3">
+                  <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  <p className="text-sm text-slate-400 font-semibold">Cargando detalles de la evaluación...</p>
+                </div>
+              ) : !detailData ? (
+                <p className="text-sm text-slate-400 text-center py-8 font-semibold">No se encontraron los detalles de esta evaluación.</p>
+              ) : (
+                <>
+                  {/* Summary Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 font-semibold">
+                    {/* Dictamen Card */}
+                    <div className={`p-4 rounded-xl border flex flex-col justify-between ${
+                      detailData.prueba.aprobado === 'Aprobado' ? 'bg-emerald-50/80 border-emerald-100 text-emerald-800' :
+                      detailData.prueba.aprobado === 'No Aprobado' ? 'bg-red-50/80 border-red-100 text-red-800' :
+                      'bg-slate-50 border-slate-100 text-slate-800'
+                    }`}>
+                      <span className="text-[10px] uppercase font-bold tracking-wider opacity-85">Dictamen Final</span>
+                      <div className="flex items-center gap-2 mt-2">
+                        {detailData.prueba.aprobado === 'Aprobado' ? (
+                          <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                        ) : detailData.prueba.aprobado === 'No Aprobado' ? (
+                          <XCircle className="h-5 w-5 text-red-600" />
+                        ) : (
+                          <ClipboardList className="h-5 w-5 text-slate-600" />
+                        )}
+                        <span className="text-base font-extrabold font-display">{detailData.prueba.aprobado}</span>
+                      </div>
+                    </div>
+
+                    {/* Metadata Card */}
+                    <div className="p-4 rounded-xl border border-outline-variant/30 bg-[#f7f9fb] flex flex-col justify-between text-on-surface">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Fecha y Formulario</span>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs font-bold text-slate-500">
+                          Fecha: <span className="font-semibold text-on-surface">{new Date(detailData.prueba.Fecha || '').toLocaleDateString('es-AR')}</span>
+                        </p>
+                        <p className="text-xs font-bold text-slate-500">
+                          Formulario: <span className="font-semibold text-on-surface">{detailData.prueba.formulario}</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Age and Care space Card */}
+                    <div className="p-4 rounded-xl border border-outline-variant/30 bg-[#f7f9fb] flex flex-col justify-between text-on-surface">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Edad y Lugar</span>
+                      <div className="mt-2 space-y-1">
+                        <p className="text-xs font-bold text-slate-500">
+                          Edad: <span className="font-semibold text-on-surface">{detailData.edadCalculada}</span>
+                        </p>
+                        <p className="text-xs font-bold text-slate-500 truncate" title={detailData.prueba.espCuidado || undefined}>
+                          Lugar: <span className="font-semibold text-on-surface">{detailData.prueba.espCuidado || 'No registrado'}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Observations Section */}
+                  {detailData.prueba.observacion && detailData.prueba.observacion !== 'Sin observación registrada.' && (
+                    <div className="p-4 bg-slate-50 border border-slate-100 rounded-xl">
+                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Observaciones</h4>
+                      <p className="text-xs text-on-surface-variant leading-relaxed font-semibold">
+                        {detailData.prueba.observacion}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Answers Table */}
+                  <div className="space-y-3">
+                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Hitos Evaluados</h4>
+                    <div className="border border-outline-variant/30 rounded-xl overflow-hidden max-h-[350px] overflow-y-auto">
+                      <table className="w-full text-xs border-collapse">
+                        <thead>
+                          <tr className="bg-slate-50 text-slate-500 uppercase tracking-wider text-[10px]">
+                            <th className="text-left px-4 py-2.5 font-bold border-b">Hito / Pregunta</th>
+                            <th className="text-left px-4 py-2.5 font-bold border-b w-32">Categoría</th>
+                            <th className="text-left px-4 py-2.5 font-bold border-b w-28 text-center">Respuesta</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {detailData.resultados.map((fila, i) => {
+                            const matchedPregunta = detailData.preguntas?.find(p => p.texto_pregunta === fila.pregunta_texto)
+                            const isValid = !matchedPregunta || detailData.preguntasValidasIds.size === 0 || detailData.preguntasValidasIds.has(matchedPregunta.id_pregunta)
+                            const isPasa = fila.respuesta_texto === 'Pasa'
+
+                            return (
+                              <tr
+                                key={i}
+                                className={`border-b border-slate-100 transition-colors ${
+                                  !isValid ? 'opacity-45 bg-slate-50' :
+                                  isPasa ? 'bg-emerald-50/20' : 'bg-red-50/20'
+                                }`}
+                              >
+                                <td className="px-4 py-2.5 font-semibold text-on-surface leading-normal">
+                                  {fila.pregunta_texto}
+                                  {!isValid && (
+                                    <span className="ml-2 text-[9px] bg-slate-200 text-slate-600 font-bold px-1.5 py-0.5 rounded uppercase">No aplica</span>
+                                  )}
+                                </td>
+                                <td className="px-4 py-2.5 text-slate-500 font-semibold">{fila.pregunta_categoria}</td>
+                                <td className="px-4 py-2.5 text-center">
+                                  <span className={`inline-block px-2.5 py-0.5 rounded-full font-bold text-[10px] ${
+                                    isPasa ? 'bg-emerald-500/10 text-emerald-600' : 'bg-red-500/10 text-red-600'
+                                  }`}>
+                                    {fila.respuesta_texto === 'Pasa' ? 'Pasa' : 'No pasa'}
+                                  </span>
+                                </td>
+                              </tr>
+                            )
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="p-5 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button
+                onClick={() => setSelectedPruebaId(null)}
+                className="bg-primary hover:brightness-110 text-on-primary px-6 py-2 rounded-full text-xs font-semibold shadow-sm transition-all"
+              >
+                Cerrar
               </button>
             </div>
           </div>

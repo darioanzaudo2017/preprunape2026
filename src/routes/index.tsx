@@ -14,11 +14,15 @@ import MapaPage from '../pages/Mapa'
 import InstitucionesPage from '../pages/Instituciones'
 import InstitucionDetailPage from '../pages/InstitucionDetail'
 import DashboardIndicadoresPage from '../pages/DashboardIndicadores'
+import PendienteAprobacion from '../pages/PendienteAprobacion'
+import EncuestaPublica from '../pages/EncuestaPublica'
 import { LayoutDashboard, Users, MapPin, LogOut, HeartPulse, ShieldCheck, Settings, Network, BarChart2 } from 'lucide-react'
 
 // ProtectedRoute Component
 function ProtectedRoute() {
   const { session, loading } = useAuthStore()
+  const { isPending } = useUserRole()
+
 
   if (loading) {
     return (
@@ -33,6 +37,10 @@ function ProtectedRoute() {
 
   if (!session) {
     return <Navigate to="/login" replace />
+  }
+
+  if (isPending) {
+    return <Navigate to="/pendiente" replace />
   }
 
   return <Layout />
@@ -183,6 +191,14 @@ export const router = createBrowserRouter([
   {
     path: '/register',
     element: <RegisterPage />,
+  },
+  {
+    path: '/pendiente',
+    element: <PendienteAprobacion />,
+  },
+  {
+    path: '/encuesta/:token',
+    element: <EncuestaPublica />,
   },
   {
     path: '/',
