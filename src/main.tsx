@@ -22,7 +22,7 @@ async function loadUserProfile(userId: string) {
   try {
     const { data, error } = await supabase
       .from('users')
-      .select('rol, Localidad, display_name')
+      .select('rol, Localidad, display_name, estado')
       .eq('iduser', userId)
       .single()
 
@@ -33,13 +33,14 @@ async function loadUserProfile(userId: string) {
     
     console.log('loadUserProfile: Profile loaded successfully:', data)
     setProfile(
-      (data?.rol as UserRol) || 'agente_municipio',
+      data?.rol as UserRol | null,
       data?.Localidad || '',
-      data?.display_name || ''
+      data?.display_name || '',
+      data?.estado || 'pendiente'
     )
   } catch (e) {
     console.error('loadUserProfile: Catch block error loading profile:', e)
-    setProfile('agente_municipio', '', '')
+    setProfile(null, '', '', 'pendiente')
   }
 }
 
@@ -58,10 +59,10 @@ function App() {
           // Instant fallback resolution based on email/metadata to prevent any UI blocking
           const { setProfile } = useAuthStore.getState()
           const isDario = session.user.email === 'darioanzaudo@gmail.com'
-          const fallbackRol = isDario ? 'admin' : 'agente_municipio'
+          const fallbackRol = isDario ? 'admin' : null
           const fallbackName = session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Usuario'
           console.log('App: Applying instant profile fallback:', { fallbackRol, fallbackName })
-          setProfile(fallbackRol, '', fallbackName)
+          setProfile(fallbackRol, '', fallbackName, isDario ? 'Activo' : 'pendiente')
           
           // Load actual profile in the background without blocking the UI thread
           loadUserProfile(session.user.id).catch(err => console.error('BG profile load error:', err))
@@ -95,10 +96,10 @@ function App() {
             // Instant fallback resolution based on email/metadata
             const { setProfile } = useAuthStore.getState()
             const isDario = session.user.email === 'darioanzaudo@gmail.com'
-            const fallbackRol = isDario ? 'admin' : 'agente_municipio'
+            const fallbackRol = isDario ? 'admin' : null
             const fallbackName = session.user.user_metadata?.display_name || session.user.email?.split('@')[0] || 'Usuario'
             console.log('App (AuthChange): Applying instant profile fallback:', { fallbackRol, fallbackName })
-            setProfile(fallbackRol, '', fallbackName)
+            setProfile(fallbackRol, '', fallbackName, isDario ? 'Activo' : 'pendiente')
             
             // Load actual profile in the background without blocking
             loadUserProfile(session.user.id).catch(err => console.error('BG profile load error:', err))

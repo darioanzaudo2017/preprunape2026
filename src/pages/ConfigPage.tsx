@@ -22,11 +22,12 @@ import {
 import type { UserRol } from '../store/authStore'
 
 interface UserRowData {
-  id: number
   iduser: string
   display_name: string | null
-  rol: UserRol
+  email: string | null
+  rol: UserRol | null
   Localidad: string | null
+  estado: string | null
   created_at: string
 }
 
@@ -57,6 +58,7 @@ export default function ConfigPage() {
   const [editDisplayName, setEditDisplayName] = useState('')
   const [editRol, setEditRol] = useState<UserRol>('agente_municipio')
   const [editLocalidad, setEditLocalidad] = useState('')
+  const [editEstado, setEditEstado] = useState('Activo')
 
   // Add Localidad State
   const [newLocalidadName, setNewLocalidadName] = useState('')
@@ -67,21 +69,17 @@ export default function ConfigPage() {
   // Form Config Local Inputs State: { [formularioName]: number }
   const [formInputs, setFormInputs] = useState<Record<string, number>>({})
 
-  // 1. Fetch Users
+  // 1. Fetch Users — via RPC para incluir email desde auth.users
   const { data: usersList, isLoading: isLoadingUsers } = useQuery<UserRowData[]>({
     queryKey: ['users-list'],
     enabled: !!isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('display_name', { ascending: true })
-
+      const { data, error } = await (supabase as any).rpc('get_users_with_email')
       if (error) {
         console.error('Error fetching users:', error)
         throw error
       }
-      return data as UserRowData[]
+      return (data ?? []) as UserRowData[]
     }
   })
 
@@ -143,13 +141,14 @@ export default function ConfigPage() {
 
   // 1. Update User Profile Mutation
   const updateUserMutation = useMutation({
-    mutationFn: async (updated: { iduser: string; display_name: string; rol: UserRol; Localidad: string }) => {
+    mutationFn: async (updated: { iduser: string; display_name: string; rol: UserRol; Localidad: string; estado: string }) => {
       const { data, error } = await supabase
         .from('users')
         .update({
           display_name: updated.display_name,
           rol: updated.rol,
-          Localidad: updated.Localidad || null
+          Localidad: updated.Localidad || null,
+          estado: updated.estado
         })
         .eq('iduser', updated.iduser)
 
@@ -351,32 +350,48 @@ export default function ConfigPage() {
                     <thead className="bg-[#545f73] text-white">
                       <tr>
                         <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider pl-8">Nombre Completo</th>
+                        <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider">Email</th>
                         <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider">Rol de Acceso</th>
                         <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider">Localidad Asignada</th>
+                        <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-center">Estado</th>
                         <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-center">Acciones</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100">
                       {filteredUsers.map((userRow) => (
-                        <tr key={userRow.iduser} className="hover:bg-slate-50 transition-colors">
+                        <tr key={userRow.iduser} className={`hover:bg-slate-50 transition-colors ${!userRow.rol || userRow.estado === 'pendiente' ? 'bg-orange-50/50' : ''}`}>
                           <td className="px-6 py-4 pl-8">
                             <span className="text-sm font-bold text-slate-800">
                               {userRow.display_name || 'Sin nombre registrado'}
                             </span>
                           </td>
+                          <td className="px-6 py-4 text-xs text-slate-500 font-mono">
+                            {userRow.email || '—'}
+                          </td>
                           <td className="px-6 py-4">
                             <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
-                              userRow.rol === 'admin'
+                              !userRow.rol
+                                ? 'bg-slate-100 text-slate-400 border border-slate-200'
+                                : userRow.rol === 'admin'
                                 ? 'bg-red-50 text-red-600 border border-red-200'
                                 : userRow.rol === 'coordinador'
                                 ? 'bg-amber-50 text-amber-600 border border-amber-200'
                                 : 'bg-primary/10 text-primary'
                             }`}>
-                              {userRow.rol}
+                              {userRow.rol || 'Sin asignar'}
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm text-slate-500 font-medium">
                             {userRow.Localidad || 'Sin asignar'}
+                          </td>
+                          <td className="px-6 py-4 text-center">
+                            <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                              userRow.estado === 'pendiente' || !userRow.estado
+                                ? 'bg-orange-50 text-orange-600 border border-orange-200'
+                                : 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                            }`}>
+                              {userRow.estado || 'pendiente'}
+                            </span>
                           </td>
                           <td className="px-6 py-4">
                             <div className="flex items-center justify-center">
@@ -384,8 +399,9 @@ export default function ConfigPage() {
                                 onClick={() => {
                                   setEditingUser(userRow)
                                   setEditDisplayName(userRow.display_name || '')
-                                  setEditRol(userRow.rol)
+                                  setEditRol(userRow.rol ?? 'agente_municipio')
                                   setEditLocalidad(userRow.Localidad || '')
+                                  setEditEstado(userRow.estado || 'pendiente')
                                 }}
                                 className="flex items-center gap-1 px-3 py-1 bg-primary/10 text-primary hover:bg-primary hover:text-on-primary rounded-full transition-all active:scale-95 text-xs font-semibold"
                               >
@@ -661,6 +677,22 @@ export default function ConfigPage() {
                   ))}
                 </select>
               </div>
+
+              {/* Estado select */}
+              <div className="space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500" htmlFor="editEstado">
+                  Estado de la cuenta
+                </label>
+                <select
+                  id="editEstado"
+                  value={editEstado}
+                  onChange={(e) => setEditEstado(e.target.value)}
+                  className="w-full px-4 py-2.5 border border-outline rounded-xl bg-[#f7f9fb] text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer"
+                >
+                  <option value="pendiente">Pendiente de aprobación</option>
+                  <option value="Activo">Activo</option>
+                </select>
+              </div>
             </div>
 
             <div className="p-5 bg-slate-50 border-t border-slate-100 flex justify-end gap-3">
@@ -675,7 +707,8 @@ export default function ConfigPage() {
                   iduser: editingUser.iduser,
                   display_name: editDisplayName,
                   rol: editRol,
-                  Localidad: editLocalidad
+                  Localidad: editLocalidad,
+                  estado: editEstado
                 })}
                 disabled={updateUserMutation.isPending || !editDisplayName.trim()}
                 className="bg-primary hover:brightness-110 text-on-primary px-6 py-2.5 rounded-full text-xs font-bold shadow-sm transition-all flex items-center gap-1.5 disabled:opacity-50"
