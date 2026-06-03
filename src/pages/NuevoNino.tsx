@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { z } from 'zod'
 import { supabase } from '../lib/supabase'
+import { useUserRole } from '../hooks/useUserRole'
 import { toast } from 'sonner'
 import {
   Baby,
@@ -46,6 +47,7 @@ type RegisterFormValues = z.infer<typeof registerSchema>
 export default function NuevoNinoPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { isAgente, localidad: localidadAgente } = useUserRole()
 
   const { data: localidades = [] } = useQuery<{ id: number; Localidad: string }[]>({
     queryKey: ['localidades'],
@@ -75,7 +77,7 @@ export default function NuevoNinoPage() {
       semanas: undefined,
       adulto_NombreyApellido: '',
       Direccion: '',
-      Localidad: '',
+      Localidad: (isAgente && localidadAgente) ? localidadAgente : '',
       Telefonocontacto: undefined,
       pesoNac: '',
       fecha_nac_real: '',
@@ -324,16 +326,23 @@ export default function NuevoNinoPage() {
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1" htmlFor="Localidad">
                   Localidad
                 </label>
-                <select
-                  className="w-full border border-outline-variant rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all bg-white"
-                  id="Localidad"
-                  {...register('Localidad')}
-                >
-                  <option value="">Seleccione localidad</option>
-                  {localidades.map(l => (
-                    <option key={l.id} value={l.Localidad}>{l.Localidad}</option>
-                  ))}
-                </select>
+                {isAgente && localidadAgente ? (
+                  <div className="w-full border border-outline-variant rounded-xl px-4 py-2.5 text-sm bg-slate-50 text-slate-600 font-semibold flex items-center justify-between">
+                    <span>{localidadAgente}</span>
+                    <span className="text-[10px] text-slate-400 font-normal uppercase tracking-wider">Asignada</span>
+                  </div>
+                ) : (
+                  <select
+                    className="w-full border border-outline-variant rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all bg-white"
+                    id="Localidad"
+                    {...register('Localidad')}
+                  >
+                    <option value="">Seleccione localidad</option>
+                    {localidades.map(l => (
+                      <option key={l.id} value={l.Localidad}>{l.Localidad}</option>
+                    ))}
+                  </select>
+                )}
               </div>
 
               {/* Teléfono de Contacto */}
