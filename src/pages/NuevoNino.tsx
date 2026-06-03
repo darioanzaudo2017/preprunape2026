@@ -170,7 +170,16 @@ export default function NuevoNinoPage() {
 
       const idAdulto = adultoData.id
 
-      // 3. Insert in intermediary table "adultoyNNyA"
+      // 3. Actualizar niño con referencia al adulto y nombre legacy
+      await supabase
+        .from('niños')
+        .update({
+          adultoresponsable: values.adulto_NombreyApellido,
+          idAdulto: idAdulto
+        })
+        .eq('idninos', idninos)
+
+      // 4. Insert in intermediary table "adultoyNNyA"
       const { error: interError } = await supabase
         .from('adultoyNNyA')
         .insert({
