@@ -127,7 +127,11 @@ export default function NuevoNinoPage() {
         .select('idninos')
         .single()
 
-      if (ninoError) throw new Error(`Error al registrar NNyA: ${ninoError.message}`)
+      if (ninoError) {
+        if (ninoError.message.includes('niños_DNI_key') || ninoError.code === '23505')
+          throw new Error('Ya existe un NNyA registrado con ese DNI. Verificá el número ingresado.')
+        throw new Error(`Error al registrar NNyA: ${ninoError.message}`)
+      }
       if (!ninoData) throw new Error('No se pudo obtener el ID del NNyA registrado.')
 
       const idninos = ninoData.idninos
