@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -65,6 +66,7 @@ export default function NuevoNinoPage() {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors }
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -92,6 +94,13 @@ export default function NuevoNinoPage() {
       adulto_observaciones: '',
     }
   })
+
+  // Sincroniza localidad cuando el perfil del agente termina de cargar
+  useEffect(() => {
+    if (isAgente && localidadAgente) {
+      setValue('Localidad', localidadAgente)
+    }
+  }, [isAgente, localidadAgente, setValue])
 
   // Watch prematuro toggle to render conditional fields
   const isPrematuro = watch('prematuro')
