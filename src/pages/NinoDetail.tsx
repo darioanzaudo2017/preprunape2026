@@ -160,6 +160,28 @@ function calculateAgeInDays(birthDateStr: string, testDateStr: string): number {
   return Math.max(0, months * 30 + days)
 }
 
+// Helper to normalize or infer form name
+function getNormalizedFormName(formName: string | null | undefined, birthDateStr: string, testDateStr: string): string {
+  const rawFormName = (formName || '').trim()
+  const replaced = rawFormName.replace(/(?:Formulario\s+cl[íi]nico\s+|Formulario\s+)/i, 'Form ').trim()
+  
+  if (replaced && replaced.toLowerCase().startsWith('form ')) {
+    return replaced
+  }
+
+  // Fallback to age calculation
+  if (!birthDateStr || !testDateStr) return 'Form 1'
+  const months = calculateAgeInMonths(birthDateStr, testDateStr)
+  
+  if (months >= 6 && months <= 11) return 'Form 1'
+  if (months >= 12 && months <= 17) return 'Form 2'
+  if (months >= 18 && months <= 29) return 'Form 3'
+  if (months >= 30 && months <= 47) return 'Form 4'
+  if (months >= 48 && months <= 71) return 'Form 5'
+  if (months < 6) return 'Form 1'
+  return 'Form 5'
+}
+
 export default function NinoDetailPage() {
   const { id } = useParams<{ id: string }>()
   const idninos = Number(id)
@@ -185,12 +207,24 @@ export default function NinoDetailPage() {
       if (pruebaError) throw pruebaError
       if (!prueba) return null
 
-      // 2. Fetch the config for this form
+      const birthDateStr = prueba.fechanacimiento || ''
+      const testDateStr = prueba.Fecha || ''
+
+      // Prefer the stored formulario value; fall back to age-based inference
+      const storedForm = (prueba.formulario || '').trim()
+      const normalizedForm = storedForm
+        ? getNormalizedFormName(storedForm, birthDateStr, testDateStr)
+        : getNormalizedFormName(null, birthDateStr, testDateStr)
+
+      // If we still can't determine the form, use the niño's birth date from the profile
+      const effectiveForm = normalizedForm || 'Form 1'
+
+      // 2. Fetch the config for this form (maybeSingle avoids 406 when not found)
       const { data: config } = await supabase
         .from('config_formularios')
         .select('*')
-        .eq('formulario', prueba.formulario || '')
-        .single()
+        .eq('formulario', effectiveForm)
+        .maybeSingle()
 
       const umbral = config?.max_no_pasa ?? 2
 
@@ -198,19 +232,19 @@ export default function NinoDetailPage() {
       const { data: rpcData, error: rpcError } = await (supabase as any)
         .rpc('ejecutar_consulta_prueba', {
           p_id_prueba: selectedPruebaId,
-          form: prueba.formulario || '',
+          form: effectiveForm,
           p_umbral: umbral
         })
 
       if (rpcError) throw rpcError
 
       // 4. Fetch questions for this form
-      const formNum = (prueba.formulario || 'Formulario 1').split(' ')[1] || '1'
+      const formNum = effectiveForm.split(' ')[1] || '1'
       const orderColumn = `numero_form${formNum}`
       const { data: preguntas, error: preguntasError } = await supabase
         .from('preguntas2')
         .select('*')
-        .eq(prueba.formulario || '', true)
+        .eq(effectiveForm, true)
         .order(orderColumn as any, { ascending: true })
 
       if (preguntasError) throw preguntasError
@@ -219,13 +253,10 @@ export default function NinoDetailPage() {
       const { data: intervalos, error: intervalosError } = await supabase
         .from('intervalosevaluacion')
         .select('*')
-        .eq('Formulario', prueba.formulario || '')
+        .eq('Formulario', effectiveForm)
 
       if (intervalosError) throw intervalosError
 
-      const birthDateStr = prueba.fechanacimiento || ''
-      const testDateStr = prueba.Fecha || ''
-      
       const edadMeses = calculateAgeInMonths(birthDateStr, testDateStr)
       const edadDias = calculateAgeInDays(birthDateStr, testDateStr)
 
@@ -260,6 +291,7 @@ export default function NinoDetailPage() {
 
       const normalizedPrueba = {
         ...prueba,
+        formulario: effectiveForm,
         aprobado,
         observacion: prueba.Observacion || prueba.observacion || 'Sin observación registrada.'
       }
@@ -524,10 +556,12 @@ export default function NinoDetailPage() {
           aprobado = rawAprobado
         }
 
+        const normalizedForm = getNormalizedFormName(item.formulario, birthDate, testDate) || 'Form 1'
+
         return {
           id_prueba: item.id_prueba,
           fechaRealizacion: testDate ? new Date(testDate).toLocaleDateString('es-AR') : 'Sin fecha',
-          formulario: item.formulario || 'Sin formulario',
+          formulario: normalizedForm,
           edadCalculada: birthDate && testDate ? calculateAge(birthDate, testDate) : 'Sin datos',
           aprobado,
           observacion: item.Observacion || 'Sin observación registrada.',
