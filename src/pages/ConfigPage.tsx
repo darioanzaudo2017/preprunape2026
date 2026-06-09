@@ -276,7 +276,7 @@ export default function ConfigPage() {
             <Settings className="h-8 w-8 text-primary" /> Panel de Configuración
           </h2>
           <p className="text-sm text-slate-500">
-            Administre usuarios del municipio, localidades asociadas y parámetros críticos del cuestionario clínico.
+            Administre usuarios del municipio, localidades asociadas y parámetros críticos del cuestionario.
           </p>
         </div>
       </header>

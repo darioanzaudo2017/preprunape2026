@@ -209,7 +209,7 @@ export function useHogar(idNino: number) {
     onSuccess: (data) => {
       toast.success(
         data.mode === 'create'
-          ? '¡Hogar creado y asociado al paciente correctamente!'
+          ? '¡Hogar creado y asociado al niño/a correctamente!'
           : '¡Historial socioeconómico actualizado con un nuevo registro!'
       );
       // Invalidar queries para refrescar la UI

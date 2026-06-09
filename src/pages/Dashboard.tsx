@@ -189,7 +189,7 @@ export default function DashboardPage() {
             {/* Stat 1: Total NNyA */}
             <div className="bg-gradient-to-br from-[#1e293b] to-[#0f172a] text-white p-6 rounded-2xl shadow-sm border border-outline-variant/10 flex flex-col justify-between min-h-[140px] group transition-all duration-300 hover:-translate-y-1 hover:shadow-md">
               <div className="flex justify-between items-start">
-                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Pacientes Registrados</span>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400">Niños/as Registrados</span>
                 <div className="bg-slate-800 p-2 rounded-xl">
                   <Users className="h-5 w-5 text-primary-fixed-dim" />
                 </div>
@@ -378,7 +378,7 @@ export default function DashboardPage() {
                 <h3 className="font-display text-sm font-bold text-brand-navy flex items-center gap-1.5">
                   <Layers className="h-4.5 w-4.5 text-primary" /> Rango Etario por Formularios Pre-PRUNAPE
                 </h3>
-                <p className="text-[10px] text-slate-400 font-medium">Clasificación automática de pacientes según formularios clínicos</p>
+                <p className="text-[10px] text-slate-400 font-medium">Clasificación automática de niños/as según formularios</p>
               </div>
 
               <div className="space-y-3 pt-2 text-xs">

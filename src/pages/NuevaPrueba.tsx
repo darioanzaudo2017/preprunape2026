@@ -436,7 +436,7 @@ export default function NuevaPruebaPage() {
       <div className="flex h-screen w-screen items-center justify-center bg-[#f7f9fb]">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <span className="font-display font-medium text-on-surface-variant">Cargando paciente...</span>
+          <span className="font-display font-medium text-on-surface-variant">Cargando niño/a...</span>
         </div>
       </div>
     )
@@ -592,7 +592,7 @@ export default function NuevaPruebaPage() {
           <ArrowLeft className="h-4 w-4" /> Volver al Perfil
         </Link>
         <div className="flex items-center gap-1.5 text-xs text-on-surface-variant">
-          <span className="font-medium">Paciente:</span>
+          <span className="font-medium">Niño/a:</span>
           <span className="font-bold text-primary">{nino.nombre}</span>
         </div>
       </header>

@@ -91,8 +91,8 @@ function Layout() {
           <div className="p-6 border-b border-brand-navy-light flex items-center gap-3">
             <HeartPulse className="h-8 w-8 text-brand-teal" />
             <div>
-              <h1 className="font-display font-semibold text-lg leading-tight">Serene</h1>
-              <p className="text-xs text-brand-teal font-medium tracking-wide">PEDIATRICS</p>
+              <h1 className="font-display font-semibold text-lg leading-tight">Prep</h1>
+              <p className="text-xs text-brand-teal font-medium tracking-wide">PRUNAPE</p>
             </div>
           </div>
 

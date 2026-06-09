@@ -318,8 +318,8 @@ export default function EncuestaPublica() {
         <div className="flex items-center gap-2.5">
           <HeartPulse className="h-6.5 w-6.5 text-[#00685f]" />
           <div>
-            <h1 className="font-display font-bold text-base leading-tight text-slate-800">Serene</h1>
-            <p className="text-[10px] text-[#00685f] font-black tracking-wider uppercase">PEDIATRICS</p>
+            <h1 className="font-display font-bold text-base leading-tight text-slate-800">Prep</h1>
+            <p className="text-[10px] text-[#00685f] font-black tracking-wider uppercase">PRUNAPE</p>
           </div>
         </div>
         <div className="px-3 py-1 bg-[#00685f]/10 rounded-full text-xs font-bold text-[#00685f]">

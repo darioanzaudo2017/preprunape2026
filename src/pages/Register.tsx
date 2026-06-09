@@ -72,7 +72,7 @@ export default function RegisterPage() {
         <div className="flex justify-between items-center w-full px-6 md:px-10 py-3">
           <div className="flex items-center gap-2">
             <HeartPulse className="h-6 w-6 text-primary animate-pulse" />
-            <span className="font-display text-xl font-bold text-primary">Serene Pediatrics</span>
+            <span className="font-display text-xl font-bold text-primary">Prep-PRUNAPE</span>
           </div>
           <div className="hidden md:flex items-center gap-6">
             <nav className="flex gap-4 text-sm font-medium text-on-surface-variant">
@@ -252,7 +252,7 @@ export default function RegisterPage() {
         <section className="hidden md:block w-1/2 relative overflow-hidden">
           <div className="absolute inset-0 bg-primary/15 mix-blend-overlay z-10"></div>
           <img
-            alt="Serene Pediatrics Reception"
+            alt="Prep-PRUNAPE Reception"
             className="absolute inset-0 w-full h-full object-cover"
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuCX8bQWWR9VZ_4gI3OiiUlktjC_pN-PaI5sxF9b9DbMk49D95s3INKDGoOoYMfEpcblwJeHl0ouTqEp4ROSuz6WFpYG5Amxlz6Q7wp7fIHSmxC-cTY8R8YJbGhjRnVS6KXEPzVGDqSEeRHr-2UMhD3cXjEfZ9FowxmIcX7aYho0nvPWpaeHiG4oqAEuIaK-nPdqDDIXdCIwmciQD5zI9BWmnNskaMNKQjo4QuonatkNfGj6d9b1A8dfu2iS6OC6NbVp2JqqsFbERxs"
           />
@@ -265,10 +265,10 @@ export default function RegisterPage() {
                 </div>
                 <div>
                   <h3 className="font-display text-xl font-bold text-on-surface mb-1">
-                    Portal Clínico Seguro
+                    Portal Seguro de Evaluación
                   </h3>
                   <p className="text-sm text-on-surface-variant">
-                    Acceda a herramientas de diagnóstico avanzadas y seguimiento longitudinal de pacientes en un entorno que cumple con los más altos estándares de confidencialidad médica.
+                    Acceda a herramientas de diagnóstico avanzadas y seguimiento longitudinal de niños/as en un entorno que cumple con los más altos estándares de confidencialidad.
                   </p>
                 </div>
               </div>
@@ -281,8 +281,8 @@ export default function RegisterPage() {
       <footer className="bg-surface-container-lowest border-t border-outline-variant py-4 px-6 md:px-10">
         <div className="flex flex-col md:flex-row justify-between items-center w-full gap-4 text-center md:text-left">
           <div className="flex flex-col md:flex-row items-center gap-2">
-            <span className="font-semibold text-secondary">Serene Pediatrics</span>
-            <p className="text-xs text-secondary/80">© 2026 Serene Pediatrics. Todos los derechos reservados.</p>
+            <span className="font-semibold text-secondary">Prep-PRUNAPE</span>
+            <p className="text-xs text-secondary/80">© 2026 Prep-PRUNAPE. Todos los derechos reservados.</p>
           </div>
           <nav className="flex gap-6 text-xs font-medium text-secondary">
             <a className="hover:text-primary transition-colors" href="#">Política de Privacidad</a>

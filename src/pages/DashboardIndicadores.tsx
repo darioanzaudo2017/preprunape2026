@@ -435,7 +435,7 @@ export default function DashboardIndicadoresPage() {
                 ) : (
                   <div className="text-3xl font-extrabold text-brand-navy font-display">{resumen?.total_ninos ?? 0}</div>
                 )}
-                <p className="text-[9px] text-slate-400 font-semibold mt-1">Pacientes únicos registrados</p>
+                <p className="text-[9px] text-slate-400 font-semibold mt-1">Niños únicos registrados</p>
               </div>
             </div>
 
@@ -684,7 +684,7 @@ export default function DashboardIndicadoresPage() {
               <div className="bg-white rounded-2xl p-6 border border-outline-variant/30 shadow-sm space-y-4">
                 <div>
                   <h3 className="font-display text-sm font-bold text-brand-navy">Evaluaciones por Formulario</h3>
-                  <p className="text-[10px] text-slate-400 font-semibold">Formularios clínicos de hitos utilizados</p>
+                  <p className="text-[10px] text-slate-400 font-semibold">Formularios de hitos utilizados</p>
                 </div>
                 {!resumen?.por_formulario || resumen.por_formulario.length === 0 ? (
                   <div className="h-[240px] flex items-center justify-center text-slate-400 text-xs font-semibold">Sin datos</div>
@@ -756,7 +756,7 @@ export default function DashboardIndicadoresPage() {
                   <tr className="bg-slate-50 text-slate-400 text-[10px] font-extrabold uppercase border-b border-slate-100">
                     <th className="px-6 py-3.5 w-32">CATEGORÍA</th>
                     <th className="px-6 py-3.5 w-36">FORMULARIOS</th>
-                    <th className="px-6 py-3.5">PREGUNTA / HITO CLÍNICO</th>
+                    <th className="px-6 py-3.5">PREGUNTA / HITO DE DESARROLLO</th>
                     <th className="px-6 py-3.5 text-center w-24">FALLOS</th>
                     <th className="px-6 py-3.5 text-center w-24">TOTAL</th>
                     <th className="px-6 py-3.5 w-44">% NO PASA</th>
@@ -768,7 +768,7 @@ export default function DashboardIndicadoresPage() {
                       <td colSpan={6} className="text-center py-10">
                         <div className="flex flex-col items-center gap-2 animate-pulse">
                           <div className="h-4 bg-slate-200 rounded w-1/4"></div>
-                          <span className="text-slate-400 text-xs font-semibold">Cargando hitos clínicos críticos...</span>
+                          <span className="text-slate-400 text-xs font-semibold">Cargando hitos críticos...</span>
                         </div>
                       </td>
                     </tr>

@@ -48,7 +48,7 @@ export default function LoginPage() {
         <div className="flex justify-between items-center w-full px-6 md:px-10 py-3">
           <div className="flex items-center gap-2">
             <HeartPulse className="h-6 w-6 text-primary animate-pulse" />
-            <span className="font-display text-xl font-bold text-primary">Serene Pediatrics</span>
+            <span className="font-display text-xl font-bold text-primary">Prep-PRUNAPE</span>
           </div>
           <div className="flex items-center gap-4">
             <button className="text-on-surface-variant hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95 duration-150">
@@ -180,9 +180,9 @@ export default function LoginPage() {
       <footer className="bg-surface-container-lowest border-t border-outline-variant py-4 px-6 md:px-10">
         <div className="flex flex-col md:flex-row justify-between items-center w-full gap-4 text-center md:text-left">
           <div className="flex flex-col md:flex-row items-center gap-2">
-            <span className="font-semibold text-secondary">Serene Pediatrics</span>
+            <span className="font-semibold text-secondary">Prep-PRUNAPE</span>
             <span className="hidden md:inline text-secondary opacity-60">|</span>
-            <span className="text-xs text-secondary/80">© 2026 Serene Pediatrics. Todos los derechos reservados.</span>
+            <span className="text-xs text-secondary/80">© 2026 Prep-PRUNAPE. Todos los derechos reservados.</span>
           </div>
           <div className="flex gap-6 text-xs font-medium text-secondary">
             <a className="hover:text-primary transition-colors" href="#">Política de Privacidad</a>

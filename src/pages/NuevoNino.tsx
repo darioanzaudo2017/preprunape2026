@@ -216,7 +216,7 @@ export default function NuevoNinoPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-3xl font-extrabold text-on-surface font-display leading-tight">
-            Registrar Nuevo Paciente
+            Registrar Nuevo Niño/a
           </h2>
           <p className="text-sm text-slate-500">
             Complete el expediente completo del niño/a junto a su adulto de referencia.

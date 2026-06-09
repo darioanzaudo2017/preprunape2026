@@ -161,12 +161,36 @@ export default function NinosPage() {
   const pendingTests = stats?.pendientes ?? 0
   const requierenPrunape = prunapeIds.size
 
-  // Paginated list calculation (6 items per page)
-  const itemsPerPage = 6
+  // Paginated list calculation (20 items per page)
+  const itemsPerPage = 20
   const totalPages = Math.ceil(filteredList.length / itemsPerPage)
-  const indexOfLastItem = currentPage * itemsPerPage
+  const activePage = Math.max(1, Math.min(currentPage, totalPages || 1))
+  const indexOfLastItem = activePage * itemsPerPage
   const indexOfFirstItem = indexOfLastItem - itemsPerPage
   const currentItems = filteredList.slice(indexOfFirstItem, indexOfLastItem)
+
+  // Visible page numbers calculation (max 5 pages shown)
+  const getVisiblePages = () => {
+    const maxVisible = 5
+    if (totalPages <= maxVisible) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1)
+    }
+
+    let start = Math.max(1, activePage - 2)
+    let end = Math.min(totalPages, activePage + 2)
+
+    if (start === 1) {
+      end = maxVisible
+    } else if (end === totalPages) {
+      start = totalPages - maxVisible + 1
+    }
+
+    const pages = []
+    for (let i = start; i <= end; i++) {
+      pages.push(i)
+    }
+    return pages
+  }
 
   return (
     <div className="p-8 max-w-[1400px] mx-auto w-full space-y-6">
@@ -306,7 +330,7 @@ export default function NinosPage() {
               ) : currentItems.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="text-center py-10 text-sm text-secondary">
-                    No se encontraron pacientes que coincidan con la búsqueda.
+                    No se encontraron niños/as que coincidan con la búsqueda.
                   </td>
                 </tr>
               ) : (
@@ -360,33 +384,33 @@ export default function NinosPage() {
         {/* Pagination Container */}
         <div className="px-6 py-4 bg-slate-50 flex items-center justify-between">
           <span className="text-xs font-medium text-on-surface-variant">
-            Mostrando {currentItems.length} de {filteredList.length} pacientes
+            Mostrando {currentItems.length} de {filteredList.length} niños/as
           </span>
           {totalPages > 1 && (
             <div className="flex gap-1">
               <button
-                disabled={currentPage === 1}
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={activePage === 1}
+                onClick={() => setCurrentPage(activePage - 1)}
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 text-on-surface-variant disabled:opacity-50"
               >
                 <ChevronLeft className="h-4 w-4" />
               </button>
-              {Array.from({ length: totalPages }).map((_, idx) => (
+              {getVisiblePages().map((page) => (
                 <button
-                  key={idx}
-                  onClick={() => setCurrentPage(idx + 1)}
+                  key={page}
+                  onClick={() => setCurrentPage(page)}
                   className={`w-8 h-8 flex items-center justify-center rounded-lg font-semibold text-xs transition-colors ${
-                    currentPage === idx + 1
+                    activePage === page
                       ? 'bg-primary text-on-primary'
                       : 'hover:bg-slate-200 text-on-surface-variant'
                   }`}
                 >
-                  {idx + 1}
+                  {page}
                 </button>
               ))}
               <button
-                disabled={currentPage === totalPages}
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={activePage === totalPages}
+                onClick={() => setCurrentPage(activePage + 1)}
                 className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-slate-200 text-on-surface-variant disabled:opacity-50"
               >
                 <ChevronRight className="h-4 w-4" />
@@ -396,36 +420,7 @@ export default function NinosPage() {
         </div>
       </section>
 
-      {/* Decorative Illustration Section */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center bg-primary-container/10 p-8 md:p-12 rounded-3xl overflow-hidden relative">
-        <div className="z-10">
-          <h3 className="text-2xl font-bold text-primary mb-3 font-display">Sistema de Evaluación Integral</h3>
-          <p className="text-sm leading-relaxed text-on-surface-variant mb-6">
-            Optimice la gestión del desarrollo infantil con herramientas clínicas avanzadas diseñadas para la precisión y el cuidado empático.
-          </p>
-          <div className="flex flex-wrap gap-4">
-            <div className="flex items-center gap-1.5 text-primary text-xs font-semibold">
-              <ShieldCheck className="h-4 w-4" />
-              Legibilidad Clínica
-            </div>
-            <div className="flex items-center gap-1.5 text-primary text-xs font-semibold">
-              <ShieldCheck className="h-4 w-4" />
-              Seguridad de Datos
-            </div>
-            <div className="flex items-center gap-1.5 text-primary text-xs font-semibold">
-              <ShieldCheck className="h-4 w-4" />
-              Seguimiento Continuo
-            </div>
-          </div>
-        </div>
-        <div className="relative h-[240px] rounded-2xl overflow-hidden shadow-md border-4 border-white">
-          <img
-            alt="Medical professional examining a child development chart"
-            className="w-full h-full object-cover"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdh4qBswn1tFQbdG_H3NhGCzqFtszHewNIFYYXxZem3V1Y9hb2QgV-TqkZja5UcChqUSjDaraBRTqCrIF8QgPB7mJaPgl3l_RWNdp6T6KYZcv_T0Z3HiU2dXCxnsVnGMIsQNdRHRRoB2JMzLyOpfuzvfA2V5EYDvtPfERj3xD1g8yPsJFuztdiW8xxQNt1gQIG12L6ihuNtbdYbtTaWJOkWd3AjZDjVNBaqkrnf-xB3lMyw-4aUx0XfOIY41EY8SGq1DGT0XJZVjM"
-          />
-        </div>
-      </section>
+
     </div>
   )
 }

@@ -211,7 +211,7 @@ export function FormularioHogar({ idNino, onSuccess, onClose }: FormularioHogarP
           <p className="text-xs text-slate-500 mt-1">
             {hogarData?.idHogar
               ? `Actualizando datos para el hogar asignado (ID: ${hogarData.idHogar})`
-              : 'Registrando datos de un nuevo hogar para el paciente'}
+              : 'Registrando datos de un nuevo hogar para el niño/a'}
           </p>
         </div>
         <div className="flex items-center gap-3">

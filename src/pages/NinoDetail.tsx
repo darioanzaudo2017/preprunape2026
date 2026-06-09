@@ -636,7 +636,7 @@ export default function NinoDetailPage() {
       }
     },
     onSuccess: () => {
-      toast.success('¡Expediente del paciente y del adulto responsable actualizado con éxito!')
+      toast.success('¡Expediente del niño/a y del adulto responsable actualizado con éxito!')
       queryClient.invalidateQueries({ queryKey: ['nino', id] })
       setIsEditing(false)
     },
@@ -726,7 +726,7 @@ export default function NinoDetailPage() {
   if (isLoadingNino || isLoadingPruebas) {
     return (
       <div className="flex h-[400px] items-center justify-center">
-        <p className="text-secondary text-sm">Cargando historial clínico del paciente...</p>
+        <p className="text-secondary text-sm">Cargando historial del niño/a...</p>
       </div>
     )
   }
@@ -751,7 +751,7 @@ export default function NinoDetailPage() {
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1.5 text-on-surface-variant mb-2">
         <Link to="/" className="text-xs hover:text-primary transition-colors">
-          Pacientes
+          Niños/as
         </Link>
         <ChevronRight className="h-3 w-3 text-slate-400" />
         <span className="text-xs font-semibold text-primary">
@@ -1356,7 +1356,7 @@ export default function NinoDetailPage() {
                 </label>
                 <textarea
                   id="editChildNotes"
-                  placeholder="Detalles clínicos o sociales relevantes..."
+                  placeholder="Detalles de desarrollo o sociales relevantes..."
                   value={editOtrasCaracteristicas}
                   onChange={(e) => setEditOtrasCaracteristicas(e.target.value)}
                   className="w-full px-4 py-2 border border-outline rounded-xl bg-[#f7f9fb] text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all h-20 resize-none"
@@ -1553,7 +1553,7 @@ export default function NinoDetailPage() {
                 <div>
                   <h3 className="text-lg font-bold text-on-surface font-display">Detalle de la Evaluación</h3>
                   <p className="text-xs text-slate-400 mt-0.5 font-bold">
-                    Paciente: {nino?.nombre} {nino?.apellido}
+                    Niño/a: {nino?.nombre} {nino?.apellido}
                   </p>
                 </div>
               </div>
