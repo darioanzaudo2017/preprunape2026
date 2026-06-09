@@ -11,7 +11,6 @@ import {
   Search,
   Eye,
   Plus,
-  ShieldCheck,
   ChevronLeft,
   ChevronRight,
   Stethoscope,
