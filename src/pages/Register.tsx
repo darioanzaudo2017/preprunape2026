@@ -94,10 +94,10 @@ export default function RegisterPage() {
           <div className="max-w-md w-full space-y-8">
             <div className="space-y-2">
               <h1 className="font-display text-3xl font-bold text-primary">
-                Registro Profesional
+                Registro de Usuario
               </h1>
               <p className="text-body-md text-secondary">
-                Únase a nuestra red de profesionales de la salud dedicados al bienestar y desarrollo infantil.
+                Únase a nuestra red de trabajo y seguimiento del desarrollo infantil.
               </p>
             </div>
 
@@ -111,7 +111,7 @@ export default function RegisterPage() {
                   className="w-full px-4 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   id="fullName"
                   name="fullName"
-                  placeholder="Dr. Juana Gómez"
+                  placeholder="Juana Gómez"
                   required
                   type="text"
                   value={fullName}
@@ -119,10 +119,10 @@ export default function RegisterPage() {
                 />
               </div>
 
-              {/* Specialty Select */}
+              {/* Specialty/Role Select */}
               <div className="space-y-1">
                 <label className="text-sm font-semibold text-on-surface-variant" htmlFor="specialty">
-                  Especialidad Médica
+                  Profesional
                 </label>
                 <select
                   className="w-full px-4 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all appearance-none"
@@ -132,25 +132,24 @@ export default function RegisterPage() {
                   value={specialty}
                   onChange={(e) => setSpecialty(e.target.value)}
                 >
-                  <option value="" disabled>Seleccione su especialidad</option>
-                  <option value="pediatria-general">Pediatría General</option>
-                  <option value="neurologia-infantil">Neurología Infantil</option>
-                  <option value="psicologia-infantil">Psicología Infantil</option>
-                  <option value="trabajo-social">Trabajo Social</option>
-                  <option value="ortopedia-pediatrica">Ortopedia Pediátrica</option>
+                  <option value="" disabled>Seleccione su opción</option>
+                  <option value="cuidador">Cuidador/a</option>
+                  <option value="agente-municipal">Agente municipal</option>
+                  <option value="admin-municipal">Admin municipal</option>
+                  <option value="otro">Otro</option>
                 </select>
               </div>
 
               {/* Institution */}
               <div className="space-y-1">
                 <label className="text-sm font-semibold text-on-surface-variant" htmlFor="institution">
-                  Institución / Clínica
+                  Institución / Municipio
                 </label>
                 <input
                   className="w-full px-4 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   id="institution"
                   name="institution"
-                  placeholder="Hospital de Niños"
+                  placeholder="Municipio de ejemplo"
                   required
                   type="text"
                   value={institution}
@@ -167,7 +166,7 @@ export default function RegisterPage() {
                   className="w-full px-4 py-2.5 rounded-lg border border-outline-variant bg-surface text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   id="email"
                   name="email"
-                  placeholder="juana.gomez@clinica.org"
+                  placeholder="juana.gomez@correo.com"
                   required
                   type="email"
                   value={email}
