@@ -92,9 +92,9 @@ export default function LoginPage() {
                     <Lock className="h-4 w-4 text-primary" />
                     Contraseña
                   </label>
-                  <a className="text-xs text-primary hover:underline transition-all font-medium" href="#">
-                    Política de Privacidad
-                  </a>
+                  <Link className="text-xs text-primary hover:underline transition-all font-medium" to="/forgot-password">
+                    ¿Olvidaste tu contraseña?
+                  </Link>
                 </div>
                 <div className="relative">
                   <input

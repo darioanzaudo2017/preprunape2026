@@ -3,6 +3,8 @@ import { useAuthStore } from '../store/authStore'
 import { useUserRole } from '../hooks/useUserRole'
 import LoginPage from '../pages/Login'
 import RegisterPage from '../pages/Register'
+import ForgotPasswordPage from '../pages/ForgotPassword'
+import UpdatePasswordPage from '../pages/UpdatePassword'
 import DashboardPage from '../pages/Dashboard'
 import NinosPage from '../pages/Ninos'
 import NuevoNinoPage from '../pages/NuevoNino'
@@ -191,6 +193,14 @@ export const router = createBrowserRouter([
   {
     path: '/register',
     element: <RegisterPage />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: '/update-password',
+    element: <UpdatePasswordPage />,
   },
   {
     path: '/pendiente',

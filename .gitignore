@@ -31,3 +31,7 @@ dist-ssr
 # Scratch and temp files
 scratch/
 .tempmediaStorage/
+
+# AI tooling
+.atl/
+.playwright-mcp/
