@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useUserRole } from '../hooks/useUserRole'
@@ -96,6 +96,20 @@ export default function DashboardIndicadoresPage() {
 
   // Table pagination state
   const [currentPage, setCurrentPage] = useState(1)
+  const [isPrinting] = useState(false)
+
+  // Forzar re-cálculo de dimensiones de Recharts antes de imprimir
+  useEffect(() => {
+    const onBeforePrint = () => {
+      window.dispatchEvent(new Event('resize'))
+    }
+    window.addEventListener('beforeprint', onBeforePrint)
+    return () => window.removeEventListener('beforeprint', onBeforePrint)
+  }, [])
+
+  const handlePrint = () => {
+    window.print()
+  }
 
   // 2. Fetch localities list from Supabase table 'Localidad'
   const { data: localidades = [] } = useQuery<{ id: number; Localidad: string }[]>({
@@ -403,10 +417,11 @@ export default function DashboardIndicadoresPage() {
             <X className="h-3.5 w-3.5" /> Limpiar Filtros
           </button>
           <button
-            onClick={() => window.print()}
-            className="px-5 py-2 rounded-xl text-xs font-bold bg-primary text-white hover:bg-primary/90 flex items-center gap-1.5 transition-colors md:h-[34px] shadow-sm"
+            onClick={handlePrint}
+            disabled={isLoadingResumen || isLoadingPreguntas || isLoadingRangos || isPrinting}
+            className="px-5 py-2 rounded-xl text-xs font-bold bg-primary text-white hover:bg-primary/90 flex items-center gap-1.5 transition-colors md:h-[34px] shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            <Printer className="h-3.5 w-3.5" /> Imprimir / PDF
+            <Printer className="h-3.5 w-3.5" /> {isLoadingResumen || isLoadingPreguntas || isLoadingRangos ? 'Cargando...' : isPrinting ? 'Preparando...' : 'Imprimir / PDF'}
           </button>
         </div>
       </nav>
@@ -443,7 +458,7 @@ export default function DashboardIndicadoresPage() {
       ) : (
         <>
           {/* KPI Dashboard Cards row */}
-          <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+          <section className="kpi-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
             
             {/* Card 1: Total NNyA (Azul) */}
             <div className="bg-white rounded-2xl p-6 border-l-4 border-l-blue-600 border border-outline-variant/30 shadow-sm flex flex-col justify-between min-h-[110px]">
@@ -572,7 +587,7 @@ export default function DashboardIndicadoresPage() {
           )}
 
           {/* FILA 1 — Gráficos (3 columnas) */}
-          <section className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <section className="charts-grid-3 grid grid-cols-1 lg:grid-cols-3 gap-6">
             
             {/* Chart 1.1: Distribución por género */}
             {isLoadingResumen ? <SkeletonBlock /> : (
@@ -673,7 +688,7 @@ export default function DashboardIndicadoresPage() {
           </section>
 
           {/* FILA 2 — Gráficos (2 columnas) */}
-          <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <section className="charts-grid-2 grid grid-cols-1 lg:grid-cols-2 gap-6">
             
             {/* Chart 2.1: Rangos etarios */}
             {isLoadingRangos ? <SkeletonBlock /> : (

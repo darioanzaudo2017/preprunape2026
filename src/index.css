@@ -107,27 +107,33 @@
     display: none !important;
   }
 
-  /* El layout deja de ser flex y el main ocupa todo */
-  .flex.h-screen.w-screen {
+  /* Liberar todos los contenedores con altura/overflow fijos */
+  html, body {
+    height: auto !important;
+    overflow: visible !important;
+  }
+
+  .flex.h-screen.w-screen,
+  .flex-1.overflow-y-auto,
+  .overflow-hidden {
     display: block !important;
+    height: auto !important;
+    min-height: unset !important;
+    max-height: unset !important;
+    overflow: visible !important;
   }
 
   main {
     display: block !important;
     overflow: visible !important;
     width: 100% !important;
-  }
-
-  /* El contenedor scrollable se expande completo */
-  .flex-1.overflow-y-auto {
-    overflow: visible !important;
     height: auto !important;
   }
 
   /* Página en horizontal para que quepan los gráficos */
   @page {
     size: A4 landscape;
-    margin: 1.5cm;
+    margin: 1.2cm;
   }
 
   body {
@@ -136,31 +142,61 @@
     font-size: 11px;
   }
 
-  /* Cards y secciones no se parten entre páginas */
-  .print-section {
-    page-break-inside: avoid;
-    break-inside: avoid;
+  /* Contenedor principal sin restricciones de altura */
+  .min-h-screen {
+    min-height: unset !important;
   }
 
-  /* Grilla de gráficos: 2 columnas en impresión */
-  .print-grid {
+  .p-8 {
+    padding: 0.5rem !important;
+  }
+
+  /* Forzar grilla de 5 columnas para las KPI cards */
+  .kpi-grid {
     display: grid !important;
-    grid-template-columns: 1fr 1fr !important;
-    gap: 1rem !important;
+    grid-template-columns: repeat(5, 1fr) !important;
+    gap: 0.5rem !important;
   }
 
-  /* Asegurar que los SVG de Recharts se vean */
-  svg {
+  /* Forzar grilla de 3 columnas para los gráficos */
+  .charts-grid-3 {
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+
+  /* Forzar grilla de 2 columnas */
+  .charts-grid-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem !important;
+  }
+
+  /* Reducir separación entre secciones */
+  .space-y-8 > * + * {
+    margin-top: 0.75rem !important;
+  }
+
+  /* Reducir padding interno de cards */
+  .p-6 {
+    padding: 0.6rem !important;
+  }
+
+  .text-3xl {
+    font-size: 1.3rem !important;
+  }
+
+  /* Recharts: evitar que el SVG se desborde o quede invisible */
+  .recharts-wrapper svg {
     overflow: visible !important;
   }
 
-  /* Sombras y bordes más suaves para papel */
+  /* Sin sombras en papel */
   * {
     box-shadow: none !important;
     text-shadow: none !important;
   }
 
-  /* Colores de fondo en cards se mantienen */
   .bg-white {
     background: white !important;
     border: 1px solid #e2e8f0 !important;

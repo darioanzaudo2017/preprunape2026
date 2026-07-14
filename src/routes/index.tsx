@@ -77,7 +77,7 @@ function Layout() {
   const navItems = [
     { name: 'Dashboard', path: '/', icon: LayoutDashboard, visible: true },
     { name: 'Niños (NNyA)', path: '/ninos', icon: Users, visible: true },
-    { name: 'Indicadores', path: '/indicadores', icon: BarChart2, visible: isAdmin || isCoordinador },
+    { name: 'Indicadores', path: '/indicadores', icon: BarChart2, visible: true },
     { name: 'Instituciones Red PI', path: '/instituciones', icon: Network, visible: true },
     { name: 'Configuración', path: '/config', icon: Settings, visible: isAdmin },
   ].filter((item) => item.visible)
