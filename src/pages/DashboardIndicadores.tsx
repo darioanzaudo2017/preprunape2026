@@ -29,7 +29,8 @@ import {
   TrendingDown,
   Info,
   MapPin,
-  Stethoscope
+  Stethoscope,
+  Printer
 } from 'lucide-react'
 
 // Interfaces for database RPC responses
@@ -305,7 +306,7 @@ export default function DashboardIndicadoresPage() {
     <div className="p-8 max-w-[1400px] mx-auto w-full space-y-8 bg-[#f7f9fb] min-h-screen">
       
       {/* Sticky Filters bar */}
-      <nav className="sticky top-0 z-30 bg-[#f7f9fb]/90 backdrop-blur-md pb-4 pt-1 flex flex-col md:flex-row gap-4 items-end border-b border-slate-200/40">
+      <nav className="no-print sticky top-0 z-30 bg-[#f7f9fb]/90 backdrop-blur-md pb-4 pt-1 flex flex-col md:flex-row gap-4 items-end border-b border-slate-200/40">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-3 w-full text-xs">
           {/* Fecha Desde */}
           <div className="space-y-1">
@@ -394,13 +395,33 @@ export default function DashboardIndicadoresPage() {
           </div>
         </div>
 
-        <button
-          onClick={handleClearFilters}
-          className="px-5 py-2 rounded-xl text-xs font-bold bg-[#f1f5f9] text-[#475569] border border-slate-200 hover:bg-[#e2e8f0] flex items-center gap-1.5 transition-colors shrink-0 md:h-[34px]"
-        >
-          <X className="h-3.5 w-3.5" /> Limpiar Filtros
-        </button>
+        <div className="flex gap-2 shrink-0">
+          <button
+            onClick={handleClearFilters}
+            className="px-5 py-2 rounded-xl text-xs font-bold bg-[#f1f5f9] text-[#475569] border border-slate-200 hover:bg-[#e2e8f0] flex items-center gap-1.5 transition-colors md:h-[34px]"
+          >
+            <X className="h-3.5 w-3.5" /> Limpiar Filtros
+          </button>
+          <button
+            onClick={() => window.print()}
+            className="px-5 py-2 rounded-xl text-xs font-bold bg-primary text-white hover:bg-primary/90 flex items-center gap-1.5 transition-colors md:h-[34px] shadow-sm"
+          >
+            <Printer className="h-3.5 w-3.5" /> Imprimir / PDF
+          </button>
+        </div>
       </nav>
+
+      {/* Header visible solo al imprimir */}
+      <div className="hidden print:block mb-6 border-b border-slate-300 pb-4">
+        <h1 className="text-xl font-bold text-slate-800">Tablero de Indicadores — PrepPRUNAPE</h1>
+        <p className="text-xs text-slate-500 mt-1">
+          {activeLocalidad ? `Localidad: ${activeLocalidad}` : 'Todas las localidades'}
+          {fechaDesde ? ` | Desde: ${new Date(fechaDesde).toLocaleDateString('es-AR')}` : ''}
+          {fechaHasta ? ` | Hasta: ${new Date(fechaHasta).toLocaleDateString('es-AR')}` : ''}
+          {pGenero ? ` | Género: ${pGenero}` : ''}
+          {' | '}Generado: {new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+        </p>
+      </div>
 
       {/* Empty State when no data matches active filter set */}
       {hasNoData ? (
