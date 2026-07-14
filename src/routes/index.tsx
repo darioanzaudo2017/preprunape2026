@@ -61,7 +61,7 @@ const ROL_COLORS: Record<string, string> = {
 // Layout with Sidebar and Navigation
 function Layout() {
   const { user, signOut } = useAuthStore()
-  const { rol, localidad, displayName, isAdmin, isCoordinador } = useUserRole()
+  const { rol, localidad, displayName, isAdmin } = useUserRole()
   const location = useLocation()
   const navigate = useNavigate()
 
