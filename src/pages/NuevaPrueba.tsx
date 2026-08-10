@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { formatDate } from '../lib/utils'
 import { toast } from 'sonner'
 import {
   ArrowLeft,
@@ -644,7 +645,7 @@ export default function NuevaPruebaPage() {
               <div>
                 <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Fecha Nac. del Niño</p>
                 <p className="text-lg font-bold text-on-surface mt-0.5">
-                  {nino.fecha_nacimiento ? new Date(nino.fecha_nacimiento).toLocaleDateString('es-AR') : 'Sin fecha'}
+                  {formatDate(nino.fecha_nacimiento)}
                 </p>
               </div>
               <div>

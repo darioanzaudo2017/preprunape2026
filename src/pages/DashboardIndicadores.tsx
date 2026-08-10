@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react'
+import { formatDate } from '../lib/utils'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { useUserRole } from '../hooks/useUserRole'
@@ -35,6 +36,7 @@ import {
 
 // Interfaces for database RPC responses
 interface DashboardResumen {
+  total_registrados: number
   total_ninos: number
   total_pruebas: number
   total_aprobados: number
@@ -90,6 +92,7 @@ export default function DashboardIndicadoresPage() {
   const [pGenero, setPGenero] = useState<string>('')
   const [pLocalidad, setPLocalidad] = useState<string>('')
   const [pCategoria, setPCategoria] = useState<string>('')
+  const [pEspacio, setPEspacio] = useState<string>('')
 
   // Resolve locality dynamically based on role/isAgente
   const activeLocalidad = (isAgente ? userLocalidad : pLocalidad) || ''
@@ -124,15 +127,31 @@ export default function DashboardIndicadoresPage() {
     }
   })
 
+  // 2b. Fetch espacios de cuidado disponibles
+  const { data: espacios = [] } = useQuery<string[]>({
+    queryKey: ['espacios-cuidado'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('Prueba_pre_prunape')
+        .select('espCuidado')
+        .not('espCuidado', 'is', null)
+        .neq('espCuidado', '')
+      if (error) throw error
+      const unicos = [...new Set((data ?? []).map((r: any) => r.espCuidado as string))]
+      return unicos.sort()
+    }
+  })
+
   // 3. Query 1: get_dashboard_resumen — todos los filtros
   const { data: resumen, isLoading: isLoadingResumen } = useQuery<DashboardResumen | null>({
-    queryKey: ['dashboard-resumen-rpc', fechaDesde, fechaHasta, activeLocalidad, pGenero],
+    queryKey: ['dashboard-resumen-rpc', fechaDesde, fechaHasta, activeLocalidad, pGenero, pEspacio],
     queryFn: async () => {
       const { data, error } = await (supabase as any).rpc('get_dashboard_resumen', {
         fecha_desde: fechaDesde || null,
         fecha_hasta: fechaHasta || null,
         p_localidad: activeLocalidad || null,
-        p_genero: pGenero || null
+        p_genero: pGenero || null,
+        p_espacio_cuidado: pEspacio || null
       })
       if (error) throw error
       // Supabase puede devolver el JSON como objeto directo o envuelto en array
@@ -146,7 +165,7 @@ export default function DashboardIndicadoresPage() {
 
   // 4. Query 2: get_preguntas_no_pasa — todos los filtros
   const { data: preguntasNoPasa = [], isLoading: isLoadingPreguntas } = useQuery<PreguntaNoPasaRow[]>({
-    queryKey: ['preguntas-no-pasa-rpc', fechaDesde, fechaHasta, pGenero, pCategoria, activeLocalidad],
+    queryKey: ['preguntas-no-pasa-rpc', fechaDesde, fechaHasta, pGenero, pCategoria, activeLocalidad, pEspacio],
     queryFn: async () => {
       const { data, error } = await (supabase as any).rpc('get_preguntas_no_pasa', {
         fecha_desde: fechaDesde || null,
@@ -154,7 +173,8 @@ export default function DashboardIndicadoresPage() {
         p_genero: pGenero || null,
         p_categoria: pCategoria || null,
         p_localidad: activeLocalidad || null,
-        p_limit: 150
+        p_limit: 150,
+        p_espacio_cuidado: pEspacio || null
       })
       if (error) throw error
       return data || []
@@ -163,13 +183,14 @@ export default function DashboardIndicadoresPage() {
 
   // Query: niños que requieren PRUNAPE — todos los filtros
   const { data: prunapeData = [] } = useQuery<{ idnino: number; nombre: string; ultima_prueba: string }[]>({
-    queryKey: ['prunape-alerta', activeLocalidad, fechaDesde, fechaHasta, pGenero],
+    queryKey: ['prunape-alerta', activeLocalidad, fechaDesde, fechaHasta, pGenero, pEspacio],
     queryFn: async () => {
       const { data, error } = await (supabase as any).rpc('get_ninos_requieren_prunape', {
         p_localidad: activeLocalidad || null,
         fecha_desde: fechaDesde || null,
         fecha_hasta: fechaHasta || null,
-        p_genero: pGenero || null
+        p_genero: pGenero || null,
+        p_espacio_cuidado: pEspacio || null
       })
       if (error) throw error
       return data ?? []
@@ -178,13 +199,14 @@ export default function DashboardIndicadoresPage() {
 
   // 5. Query 3: get_rangos_etarios — todos los filtros
   const { data: rangosEtarios = [], isLoading: isLoadingRangos } = useQuery<RangoEtarioRow[]>({
-    queryKey: ['rangos-etarios-rpc', fechaDesde, fechaHasta, activeLocalidad, pGenero],
+    queryKey: ['rangos-etarios-rpc', fechaDesde, fechaHasta, activeLocalidad, pGenero, pEspacio],
     queryFn: async () => {
       const { data, error } = await (supabase as any).rpc('get_rangos_etarios', {
         fecha_desde: fechaDesde || null,
         fecha_hasta: fechaHasta || null,
         p_localidad: activeLocalidad || null,
-        p_genero: pGenero || null
+        p_genero: pGenero || null,
+        p_espacio_cuidado: pEspacio || null
       })
       if (error) throw error
       return (data || []).sort((a: RangoEtarioRow, b: RangoEtarioRow) => a.orden - b.orden)
@@ -198,6 +220,7 @@ export default function DashboardIndicadoresPage() {
     setPGenero('')
     setPLocalidad('')
     setPCategoria('')
+    setPEspacio('')
     setCurrentPage(1)
   }
 
@@ -321,7 +344,7 @@ export default function DashboardIndicadoresPage() {
       
       {/* Sticky Filters bar */}
       <nav className="no-print sticky top-0 z-30 bg-[#f7f9fb]/90 backdrop-blur-md pb-4 pt-1 flex flex-col md:flex-row gap-4 items-end border-b border-slate-200/40">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 w-full text-xs">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 w-full text-xs">
           {/* Fecha Desde */}
           <div className="space-y-1">
             <label className="font-bold text-slate-500 uppercase tracking-wider text-[9px] flex items-center gap-1">
@@ -390,6 +413,23 @@ export default function DashboardIndicadoresPage() {
             </select>
           </div>
 
+          {/* Espacio de Cuidado */}
+          <div className="space-y-1">
+            <label className="font-bold text-slate-500 uppercase tracking-wider text-[9px] flex items-center gap-1">
+              <Stethoscope className="h-3 w-3" /> Espacio de Cuidado
+            </label>
+            <select
+              className="w-full px-3 py-2 border border-slate-200 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-xs font-semibold cursor-pointer"
+              value={pEspacio}
+              onChange={(e) => { setPEspacio(e.target.value); setCurrentPage(1) }}
+            >
+              <option value="">Todos</option>
+              {espacios.map((esp) => (
+                <option key={esp} value={esp}>{esp}</option>
+              ))}
+            </select>
+          </div>
+
           {/* Categoría (solo afecta preguntas no pasa) */}
           <div className="space-y-1">
             <label className="font-bold text-slate-500 uppercase tracking-wider text-[9px] flex items-center gap-1">
@@ -431,9 +471,10 @@ export default function DashboardIndicadoresPage() {
         <h1 className="text-xl font-bold text-slate-800">Tablero de Indicadores — PrepPRUNAPE</h1>
         <p className="text-xs text-slate-500 mt-1">
           {activeLocalidad ? `Localidad: ${activeLocalidad}` : 'Todas las localidades'}
-          {fechaDesde ? ` | Desde: ${new Date(fechaDesde).toLocaleDateString('es-AR')}` : ''}
-          {fechaHasta ? ` | Hasta: ${new Date(fechaHasta).toLocaleDateString('es-AR')}` : ''}
+          {fechaDesde ? ` | Desde: ${formatDate(fechaDesde)}` : ''}
+          {fechaHasta ? ` | Hasta: ${formatDate(fechaHasta)}` : ''}
           {pGenero ? ` | Género: ${pGenero}` : ''}
+          {pEspacio ? ` | Espacio: ${pEspacio}` : ''}
           {' | '}Generado: {new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
@@ -458,12 +499,27 @@ export default function DashboardIndicadoresPage() {
       ) : (
         <>
           {/* KPI Dashboard Cards row */}
-          <section className="kpi-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-            
-            {/* Card 1: Total NNyA (Azul) */}
+          <section className="kpi-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
+
+            {/* Card 0: Total Registrados (Slate) */}
+            <div className="bg-white rounded-2xl p-6 border-l-4 border-l-slate-400 border border-outline-variant/30 shadow-sm flex flex-col justify-between min-h-[110px]">
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <Users className="h-4 w-4 text-slate-400" /> Total Registrados
+              </span>
+              <div className="mt-2">
+                {isLoadingResumen ? (
+                  <div className="h-8 w-20 bg-slate-200 rounded animate-pulse"></div>
+                ) : (
+                  <div className="text-3xl font-extrabold text-brand-navy font-display">{resumen?.total_registrados ?? 0}</div>
+                )}
+                <p className="text-[9px] text-slate-400 font-semibold mt-1">Total NNyA en el sistema</p>
+              </div>
+            </div>
+
+            {/* Card 1: NNyA con evaluación (Azul) */}
             <div className="bg-white rounded-2xl p-6 border-l-4 border-l-blue-600 border border-outline-variant/30 shadow-sm flex flex-col justify-between min-h-[110px]">
               <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
-                <Users className="h-4 w-4 text-blue-600" /> Total Niños
+                <Users className="h-4 w-4 text-blue-600" /> Con Evaluación
               </span>
               <div className="mt-2">
                 {isLoadingResumen ? (
@@ -471,7 +527,7 @@ export default function DashboardIndicadoresPage() {
                 ) : (
                   <div className="text-3xl font-extrabold text-brand-navy font-display">{resumen?.total_ninos ?? 0}</div>
                 )}
-                <p className="text-[9px] text-slate-400 font-semibold mt-1">Niños únicos registrados</p>
+                <p className="text-[9px] text-slate-400 font-semibold mt-1">Con al menos una evaluación</p>
               </div>
             </div>
 
@@ -572,7 +628,7 @@ export default function DashboardIndicadoresPage() {
                         <td className="py-2 pr-4 font-mono">{(n as any).dni ?? '—'}</td>
                         <td className="py-2 pr-4">{(n as any).direccion || '—'}</td>
                         <td className="py-2 pr-4">{(n as any).localidad || '—'}</td>
-                        <td className="py-2">{n.ultima_prueba ? new Date(n.ultima_prueba).toLocaleDateString('es-AR') : '—'}</td>
+                        <td className="py-2">{formatDate(n.ultima_prueba, '—')}</td>
                       </tr>
                     ))}
                   </tbody>

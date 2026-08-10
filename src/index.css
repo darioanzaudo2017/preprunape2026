@@ -151,10 +151,10 @@
     padding: 0.5rem !important;
   }
 
-  /* Forzar grilla de 5 columnas para las KPI cards */
+  /* Forzar grilla de 6 columnas para las KPI cards */
   .kpi-grid {
     display: grid !important;
-    grid-template-columns: repeat(5, 1fr) !important;
+    grid-template-columns: repeat(6, 1fr) !important;
     gap: 0.5rem !important;
   }
 

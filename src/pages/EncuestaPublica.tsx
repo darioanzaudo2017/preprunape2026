@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
+import { formatDate } from '../lib/utils';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { hogarSchema, type HogarSchemaType } from '../features/hogar/hogarSchema';
 import { supabase } from '../lib/supabase';
@@ -337,7 +338,7 @@ export default function EncuestaPublica() {
             </span>
             <h2 className="text-lg font-black text-slate-800 mt-1">{nino.nombre}</h2>
             <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs font-semibold text-slate-500">
-              <span>F. Nacimiento: {nino.fecha_nacimiento ? new Date(nino.fecha_nacimiento).toLocaleDateString('es-AR') : '-'}</span>
+              <span>F. Nacimiento: {formatDate(nino.fecha_nacimiento, '-')}</span>
               {nino.Localidad && <span>Localidad: {nino.Localidad}</span>}
             </div>
           </div>

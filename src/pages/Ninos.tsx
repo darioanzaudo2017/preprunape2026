@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useUserRole } from '../hooks/useUserRole'
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { formatDate } from '../lib/utils'
 import {
   Users,
   CheckCircle2,
@@ -23,6 +24,9 @@ interface Ninya {
   apellido: string
   direccion: string | null
   telefono: string | null
+  fechaNacimiento: string | null
+  ultimaEvaluacion: string | null
+  formularioUltima: string | null
   requierePrunape?: boolean
   seguimiento?: { resultado: string; fecha: string } | null
 }
@@ -44,7 +48,7 @@ export default function NinosPage() {
       console.log('NinosPage: children queryFn starting...', { rol, localidad, isAgente })
       let query = supabase
         .from('niños')
-        .select('idninos, dni, nombre, Direccion, Telefonocontacto')
+        .select('idninos, dni, nombre, Direccion, Telefonocontacto, fecha_nacimiento, ultEvaluacion')
 
       if (isAgente && localidad) {
         console.log('NinosPage: Filtering children by locality:', localidad)
@@ -57,6 +61,21 @@ export default function NinosPage() {
         throw error
       }
 
+      // Traer formulario de la última prueba por niño
+      const { data: ultimasPruebas } = await supabase
+        .from('Prueba_pre_prunape')
+        .select('idniño, Fecha, formulario')
+        .order('Fecha', { ascending: false })
+
+      const ultimaPruebaMap: Record<number, { fecha: string; formulario: string | null }> = {}
+      if (ultimasPruebas) {
+        for (const p of ultimasPruebas) {
+          if (!ultimaPruebaMap[p['idniño']]) {
+            ultimaPruebaMap[p['idniño']] = { fecha: p.Fecha, formulario: p.formulario }
+          }
+        }
+      }
+
       // Fetch all seguimiento_prunape records to determine active follow-ups
       const { data: followUps } = await supabase
         .from('seguimiento_prunape')
@@ -67,10 +86,7 @@ export default function NinosPage() {
       if (followUps) {
         for (const item of followUps) {
           if (!followUpMap[item.id_nino]) {
-            followUpMap[item.id_nino] = {
-              resultado: item.resultado,
-              fecha: item.fecha
-            }
+            followUpMap[item.id_nino] = { resultado: item.resultado, fecha: item.fecha }
           }
         }
       }
@@ -81,6 +97,7 @@ export default function NinosPage() {
         const nameParts = fullNombre.split(' ')
         const nombre = nameParts[0] || 'Sin nombre'
         const apellido = nameParts.length > 1 ? nameParts.slice(1).join(' ') : 'Sin apellido'
+        const ultima = ultimaPruebaMap[item.idninos]
 
         return {
           id: String(item.idninos),
@@ -89,6 +106,9 @@ export default function NinosPage() {
           apellido,
           direccion: item.Direccion || '',
           telefono: String(item.Telefonocontacto || ''),
+          fechaNacimiento: item.fecha_nacimiento || null,
+          ultimaEvaluacion: ultima?.fecha || item.ultEvaluacion || null,
+          formularioUltima: ultima?.formulario || null,
           seguimiento: followUpMap[item.idninos] || null
         }
       })
@@ -312,32 +332,30 @@ export default function NinosPage() {
           <table className="w-full border-collapse text-left">
             <thead className="bg-[#111c2d] text-white">
               <tr>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">DIRECCIÓN</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider">NOMBRE</th>
-                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-center">TELÉFONO</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-center">DNI</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-center">F. NACIMIENTO</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-center">ÚLT. EVALUACIÓN</th>
+                <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-center">FORMULARIO</th>
                 <th className="px-6 py-4 text-xs font-bold uppercase tracking-wider text-right">ACCIONES</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {isLoading || rol === null ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-10 text-sm text-secondary">
+                  <td colSpan={6} className="text-center py-10 text-sm text-secondary">
                     Cargando registros...
                   </td>
                 </tr>
               ) : currentItems.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="text-center py-10 text-sm text-secondary">
+                  <td colSpan={6} className="text-center py-10 text-sm text-secondary">
                     No se encontraron niños/as que coincidan con la búsqueda.
                   </td>
                 </tr>
               ) : (
                 currentItems.map((nino) => (
                   <tr key={nino.id} className={`hover:bg-slate-50 transition-colors group ${nino.requierePrunape ? 'bg-violet-50/60' : ''}`}>
-                    <td className="px-6 py-4 text-sm text-on-surface-variant font-medium">
-                      {nino.direccion || 'Sin dirección registrada'}
-                    </td>
                     <td className="px-6 py-4 text-sm text-on-surface font-semibold">
                       <div className="flex flex-wrap items-center gap-2">
                         <span>{nino.apellido}, {nino.nombre}</span>
@@ -358,11 +376,23 @@ export default function NinosPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-6 py-4 text-sm text-on-surface-variant text-center">
-                      {nino.telefono || '-'}
-                    </td>
                     <td className="px-6 py-4 text-sm text-on-surface-variant text-center font-mono">
-                      {nino.dni}
+                      {nino.dni || '—'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-on-surface-variant text-center">
+                      {formatDate(nino.fechaNacimiento, '—')}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-on-surface-variant text-center">
+                      {formatDate(nino.ultimaEvaluacion, '—')}
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      {nino.formularioUltima ? (
+                        <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200/50">
+                          {nino.formularioUltima}
+                        </span>
+                      ) : (
+                        <span className="text-sm text-slate-400">—</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-right">
                       <button

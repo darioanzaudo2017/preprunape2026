@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
+import { formatDate } from '../lib/utils'
 import { toast } from 'sonner'
 import {
   User,
@@ -22,7 +23,9 @@ import {
   Save,
   X,
   Home,
-  Link2
+  Link2,
+  Globe,
+  Languages
 } from 'lucide-react'
 import SeguimientoPrunape from '../components/SeguimientoPrunape'
 import { FormularioHogar, useHogar } from '../features/hogar'
@@ -45,7 +48,9 @@ interface NinoData {
   semanas: number | null
   fechaNacReal: string
   otrasCaracteristicas: string
-  
+  origenFamilia: string
+  otroIdioma: string
+
   // Adult fields
   adultId: number | null
   adultNombre: string
@@ -406,6 +411,8 @@ export default function NinoDetailPage() {
   const [editSemanas, setEditSemanas] = useState('')
   const [editFechaNacReal, setEditFechaNacReal] = useState('')
   const [editOtrasCaracteristicas, setEditOtrasCaracteristicas] = useState('')
+  const [editOrigenFamilia, setEditOrigenFamilia] = useState('')
+  const [editOtroIdioma, setEditOtroIdioma] = useState('')
 
   // Edit Modal States - Adulto Responsable
   const [editAdultId, setEditAdultId] = useState<number | null>(null)
@@ -495,7 +502,7 @@ export default function NinoDetailPage() {
         dni: String(data.dni || ''),
         nombre,
         apellido,
-        fechaNacimiento: data.fecha_nacimiento ? new Date(data.fecha_nacimiento).toLocaleDateString('es-AR') : 'Sin fecha',
+        fechaNacimiento: formatDate(data.fecha_nacimiento),
         fechaNacRaw: data.fecha_nacimiento || '',
         genero: data.genero || 'Varon',
         telefono: data.Telefonocontacto ? String(data.Telefonocontacto) : '',
@@ -507,6 +514,8 @@ export default function NinoDetailPage() {
         semanas: data.semanas || null,
         fechaNacReal: data.fecha_nac_real || '',
         otrasCaracteristicas: data.otras_características || '',
+        origenFamilia: data.origen_familia || '',
+        otroIdioma: data.otro_idioma || '',
 
         // Adult columns
         adultId: data.idAdulto || adultData?.id || null,
@@ -560,7 +569,7 @@ export default function NinoDetailPage() {
 
         return {
           id_prueba: item.id_prueba,
-          fechaRealizacion: testDate ? new Date(testDate).toLocaleDateString('es-AR') : 'Sin fecha',
+          fechaRealizacion: formatDate(testDate),
           formulario: normalizedForm,
           edadCalculada: birthDate && testDate ? calculateAge(birthDate, testDate) : 'Sin datos',
           aprobado,
@@ -588,6 +597,8 @@ export default function NinoDetailPage() {
       semanas: number | null
       fecha_nac_real: string | null
       otras_características: string | null
+      origen_familia: string | null
+      otro_idioma: string | null
 
       // Adult fields
       adultId: number | null
@@ -617,6 +628,8 @@ export default function NinoDetailPage() {
           semanas: updated.semanas,
           fecha_nac_real: updated.fecha_nac_real || null,
           otras_características: updated.otras_características || null,
+          origen_familia: updated.origen_familia || null,
+          otro_idioma: updated.otro_idioma || null,
           adultoresponsable: updated.adultNombre || null
         })
         .eq('idninos', updated.idninos)
@@ -695,6 +708,8 @@ export default function NinoDetailPage() {
     setEditSemanas(String(nino.semanas || ''))
     setEditFechaNacReal(nino.fechaNacReal)
     setEditOtrasCaracteristicas(nino.otrasCaracteristicas)
+    setEditOrigenFamilia(nino.origenFamilia)
+    setEditOtroIdioma(nino.otroIdioma)
 
     // Load adult states
     setEditAdultId(nino.adultId)
@@ -739,6 +754,8 @@ export default function NinoDetailPage() {
       semanas: isNaN(Number(weeksNum)) ? null : weeksNum,
       fecha_nac_real: editFechaNacReal || null,
       otras_características: editOtrasCaracteristicas.trim() || null,
+      origen_familia: editOrigenFamilia || null,
+      otro_idioma: editOtroIdioma || null,
 
       // Adult responsible details
       adultId: editAdultId,
@@ -860,6 +877,24 @@ export default function NinoDetailPage() {
                   <p className="text-sm font-medium">{activeNino.direccion}</p>
                 </div>
               </div>
+              {activeNino.origenFamilia && (
+                <div className="flex items-center gap-3">
+                  <Globe className="h-5 w-5 text-on-surface-variant shrink-0" />
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Origen Familiar</p>
+                    <p className="text-sm font-medium">{activeNino.origenFamilia}</p>
+                  </div>
+                </div>
+              )}
+              {activeNino.otroIdioma && (
+                <div className="flex items-center gap-3">
+                  <Languages className="h-5 w-5 text-on-surface-variant shrink-0" />
+                  <div>
+                    <p className="text-[10px] uppercase font-bold text-slate-400">Idiomas en Casa</p>
+                    <p className="text-sm font-medium">{activeNino.otroIdioma}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -1066,7 +1101,7 @@ export default function NinoDetailPage() {
                     Contexto Socioeconómico y Habitacional
                   </h4>
                   <p className="text-xs text-slate-400">
-                    Última actualización: {hogarData.snapshot?.fecha ? new Date(hogarData.snapshot.fecha).toLocaleDateString('es-AR') : 'Sin fecha'}
+                    Última actualización: {formatDate(hogarData.snapshot?.fecha)}
                   </p>
                 </div>
                 <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 self-start sm:self-auto">
@@ -1383,6 +1418,97 @@ export default function NinoDetailPage() {
                 </div>
               )}
 
+              {/* Origen de la Familia */}
+              <div className="col-span-1 md:col-span-2 space-y-1">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500" htmlFor="editOrigenFamilia">
+                  Origen de la Familia
+                </label>
+                <select
+                  id="editOrigenFamilia"
+                  value={editOrigenFamilia}
+                  onChange={(e) => setEditOrigenFamilia(e.target.value)}
+                  className="w-full px-4 py-2 border border-outline rounded-xl bg-[#f7f9fb] text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                >
+                  <option value="">Sin especificar</option>
+                  <optgroup label="Provincias Argentinas">
+                    <option value="Buenos Aires">Buenos Aires</option>
+                    <option value="CABA">Ciudad Autónoma de Buenos Aires</option>
+                    <option value="Catamarca">Catamarca</option>
+                    <option value="Chaco">Chaco</option>
+                    <option value="Chubut">Chubut</option>
+                    <option value="Córdoba">Córdoba</option>
+                    <option value="Corrientes">Corrientes</option>
+                    <option value="Entre Ríos">Entre Ríos</option>
+                    <option value="Formosa">Formosa</option>
+                    <option value="Jujuy">Jujuy</option>
+                    <option value="La Pampa">La Pampa</option>
+                    <option value="La Rioja">La Rioja</option>
+                    <option value="Mendoza">Mendoza</option>
+                    <option value="Misiones">Misiones</option>
+                    <option value="Neuquén">Neuquén</option>
+                    <option value="Río Negro">Río Negro</option>
+                    <option value="Salta">Salta</option>
+                    <option value="San Juan">San Juan</option>
+                    <option value="San Luis">San Luis</option>
+                    <option value="Santa Cruz">Santa Cruz</option>
+                    <option value="Santa Fe">Santa Fe</option>
+                    <option value="Santiago del Estero">Santiago del Estero</option>
+                    <option value="Tierra del Fuego">Tierra del Fuego</option>
+                    <option value="Tucumán">Tucumán</option>
+                  </optgroup>
+                  <optgroup label="Países de América Latina">
+                    <option value="Bolivia">Bolivia</option>
+                    <option value="Brasil">Brasil</option>
+                    <option value="Chile">Chile</option>
+                    <option value="Colombia">Colombia</option>
+                    <option value="Costa Rica">Costa Rica</option>
+                    <option value="Cuba">Cuba</option>
+                    <option value="Ecuador">Ecuador</option>
+                    <option value="El Salvador">El Salvador</option>
+                    <option value="Guatemala">Guatemala</option>
+                    <option value="Haití">Haití</option>
+                    <option value="Honduras">Honduras</option>
+                    <option value="México">México</option>
+                    <option value="Nicaragua">Nicaragua</option>
+                    <option value="Panamá">Panamá</option>
+                    <option value="Paraguay">Paraguay</option>
+                    <option value="Perú">Perú</option>
+                    <option value="República Dominicana">República Dominicana</option>
+                    <option value="Uruguay">Uruguay</option>
+                    <option value="Venezuela">Venezuela</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              {/* Otro Idioma en Casa */}
+              <div className="col-span-1 md:col-span-2 space-y-2">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  ¿Qué otro idioma hablan en casa?
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {['Quechua','Guaraní','Aymara','Portugués','Mapudungun','Wichí','Toba / Qom','Creole (Haití)','Otro'].map(lang => {
+                    const selected = editOtroIdioma.split(', ').filter(Boolean)
+                    const isChecked = selected.includes(lang)
+                    return (
+                      <label key={lang} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            const updated = isChecked
+                              ? selected.filter(l => l !== lang)
+                              : [...selected, lang]
+                            setEditOtroIdioma(updated.join(', '))
+                          }}
+                          className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary/20"
+                        />
+                        {lang}
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+
               {/* Otras Características */}
               <div className="col-span-1 md:col-span-2 space-y-1">
                 <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500" htmlFor="editChildNotes">
@@ -1636,7 +1762,7 @@ export default function NinoDetailPage() {
                       <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Fecha y Formulario</span>
                       <div className="mt-2 space-y-1">
                         <p className="text-xs font-bold text-slate-500">
-                          Fecha: <span className="font-semibold text-on-surface">{new Date(detailData.prueba.Fecha || '').toLocaleDateString('es-AR')}</span>
+                          Fecha: <span className="font-semibold text-on-surface">{formatDate(detailData.prueba.Fecha)}</span>
                         </p>
                         <p className="text-xs font-bold text-slate-500">
                           Formulario: <span className="font-semibold text-on-surface">{detailData.prueba.formulario}</span>

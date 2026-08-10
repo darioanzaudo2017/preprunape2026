@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -12,7 +12,10 @@ import {
   Users,
   Save,
   X,
-  Loader2
+  Loader2,
+  CheckCircle2,
+  ClipboardList,
+  ArrowLeft,
 } from 'lucide-react'
 
 // Zod validation schema in Spanish matching RHF exact types
@@ -30,6 +33,8 @@ const registerSchema = z.object({
   semanas: z.number().or(z.nan()).optional(),
   fecha_nac_real: z.string(),
   otras_características: z.string(),
+  origen_familia: z.string(),
+  otro_idioma: z.string(),
 
   // Adulto Responsable Fields
   adulto_NombreyApellido: z.string().min(1, 'El nombre y apellido del adulto es requerido'),
@@ -49,6 +54,7 @@ export default function NuevoNinoPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { isAgente, localidad: localidadAgente } = useUserRole()
+  const [ninoRegistrado, setNinoRegistrado] = useState<{ id: number; nombre: string } | null>(null)
 
   const { data: localidades = [] } = useQuery<{ id: number; Localidad: string }[]>({
     queryKey: ['localidades'],
@@ -84,6 +90,8 @@ export default function NuevoNinoPage() {
       pesoNac: '',
       fecha_nac_real: '',
       otras_características: '',
+      origen_familia: '',
+      otro_idioma: '',
       adulto_DNI: '',
       adulto_Edad: '',
       adulto_genero: '',
@@ -133,6 +141,8 @@ export default function NuevoNinoPage() {
           fecha_nac_real: (values.prematuro && values.fecha_nac_real) ? values.fecha_nac_real : null,
           pesoNac: values.pesoNac || null,
           otras_características: values.otras_características || null,
+          origen_familia: values.origen_familia || null,
+          otro_idioma: values.otro_idioma || null,
           adultoresponsable: null // Field legacy to be left null
         })
         .select('idninos')
@@ -191,10 +201,9 @@ export default function NuevoNinoPage() {
 
       return idninos
     },
-    onSuccess: () => {
+    onSuccess: (idninos, variables) => {
       queryClient.invalidateQueries({ queryKey: ['ninos'] })
-      toast.success('¡NNyA y Adulto Responsable registrados con éxito!')
-      navigate('/')
+      setNinoRegistrado({ id: idninos, nombre: variables.nombre })
     },
     onError: (err: any) => {
       console.error(err)
@@ -209,6 +218,40 @@ export default function NuevoNinoPage() {
   const onInvalid = (errors: any) => {
     console.error('Validación fallida:', errors)
     toast.error('Completá los campos requeridos antes de guardar.')
+  }
+
+  if (ninoRegistrado) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div className="bg-white rounded-2xl shadow-2xl border border-outline-variant/30 w-full max-w-md p-8 flex flex-col items-center text-center space-y-6">
+          <div className="bg-emerald-100 rounded-full p-4">
+            <CheckCircle2 className="h-10 w-10 text-emerald-600" />
+          </div>
+          <div>
+            <h2 className="text-xl font-extrabold text-on-surface font-display">¡Registro exitoso!</h2>
+            <p className="text-sm text-slate-500 mt-1">
+              <span className="font-semibold text-on-surface">{ninoRegistrado.nombre}</span> y su adulto responsable fueron registrados correctamente.
+            </p>
+          </div>
+          <div className="w-full space-y-3">
+            <button
+              onClick={() => navigate(`/ninos/${ninoRegistrado.id}/nueva-prueba`)}
+              className="w-full flex items-center justify-center gap-2 bg-primary text-on-primary px-6 py-3 rounded-xl text-sm font-bold hover:brightness-110 transition-all shadow-md shadow-primary/10"
+            >
+              <ClipboardList className="h-4 w-4" />
+              Ir al perfil y cargar una evaluación
+            </button>
+            <button
+              onClick={() => navigate('/ninos')}
+              className="w-full flex items-center justify-center gap-2 border border-outline-variant text-slate-600 px-6 py-3 rounded-xl text-sm font-semibold hover:bg-slate-50 transition-all"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Volver al listado de niños
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   return (
@@ -422,6 +465,97 @@ export default function NuevoNinoPage() {
                   </div>
                 </div>
               )}
+
+              {/* Origen de la Familia */}
+              <div className="col-span-1 md:col-span-2 flex flex-col">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1" htmlFor="origen_familia">
+                  Origen de la Familia
+                </label>
+                <select
+                  className="w-full border border-outline-variant rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all bg-white"
+                  id="origen_familia"
+                  {...register('origen_familia')}
+                >
+                  <option value="">Sin especificar</option>
+                  <optgroup label="Provincias Argentinas">
+                    <option value="Buenos Aires">Buenos Aires</option>
+                    <option value="CABA">Ciudad Autónoma de Buenos Aires</option>
+                    <option value="Catamarca">Catamarca</option>
+                    <option value="Chaco">Chaco</option>
+                    <option value="Chubut">Chubut</option>
+                    <option value="Córdoba">Córdoba</option>
+                    <option value="Corrientes">Corrientes</option>
+                    <option value="Entre Ríos">Entre Ríos</option>
+                    <option value="Formosa">Formosa</option>
+                    <option value="Jujuy">Jujuy</option>
+                    <option value="La Pampa">La Pampa</option>
+                    <option value="La Rioja">La Rioja</option>
+                    <option value="Mendoza">Mendoza</option>
+                    <option value="Misiones">Misiones</option>
+                    <option value="Neuquén">Neuquén</option>
+                    <option value="Río Negro">Río Negro</option>
+                    <option value="Salta">Salta</option>
+                    <option value="San Juan">San Juan</option>
+                    <option value="San Luis">San Luis</option>
+                    <option value="Santa Cruz">Santa Cruz</option>
+                    <option value="Santa Fe">Santa Fe</option>
+                    <option value="Santiago del Estero">Santiago del Estero</option>
+                    <option value="Tierra del Fuego">Tierra del Fuego</option>
+                    <option value="Tucumán">Tucumán</option>
+                  </optgroup>
+                  <optgroup label="Países de América Latina">
+                    <option value="Bolivia">Bolivia</option>
+                    <option value="Brasil">Brasil</option>
+                    <option value="Chile">Chile</option>
+                    <option value="Colombia">Colombia</option>
+                    <option value="Costa Rica">Costa Rica</option>
+                    <option value="Cuba">Cuba</option>
+                    <option value="Ecuador">Ecuador</option>
+                    <option value="El Salvador">El Salvador</option>
+                    <option value="Guatemala">Guatemala</option>
+                    <option value="Haití">Haití</option>
+                    <option value="Honduras">Honduras</option>
+                    <option value="México">México</option>
+                    <option value="Nicaragua">Nicaragua</option>
+                    <option value="Panamá">Panamá</option>
+                    <option value="Paraguay">Paraguay</option>
+                    <option value="Perú">Perú</option>
+                    <option value="República Dominicana">República Dominicana</option>
+                    <option value="Uruguay">Uruguay</option>
+                    <option value="Venezuela">Venezuela</option>
+                  </optgroup>
+                </select>
+              </div>
+
+              {/* Otro Idioma en Casa */}
+              <div className="col-span-1 md:col-span-2 flex flex-col gap-2">
+                <label className="text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                  ¿Qué otro idioma hablan en casa?
+                </label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {['Quechua','Guaraní','Aymara','Portugués','Mapudungun','Wichí','Toba / Qom','Creole (Haití)','Otro'].map(lang => {
+                    const current = watch('otro_idioma') || ''
+                    const selected = current.split(', ').filter(Boolean)
+                    const isChecked = selected.includes(lang)
+                    return (
+                      <label key={lang} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer select-none">
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => {
+                            const updated = isChecked
+                              ? selected.filter((l: string) => l !== lang)
+                              : [...selected, lang]
+                            setValue('otro_idioma', updated.join(', '))
+                          }}
+                          className="h-4 w-4 rounded border-outline-variant text-primary focus:ring-primary/20"
+                        />
+                        {lang}
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
 
               {/* Otras Características */}
               <div className="col-span-1 md:col-span-2 flex flex-col">
