@@ -714,6 +714,9 @@ export default function NuevaPruebaPage() {
                   <option value="" disabled>Seleccione una opción</option>
                   <option value="Sala Cuna">Sala Cuna</option>
                   <option value="Jardin Municipal">Jardin Municipal</option>
+                  <option value="Jardin Provincial">Jardín Provincial</option>
+                  <option value="Jardines de infantes públicos">Jardines de Infantes Públicos</option>
+                  <option value="Municipal (gestión con ONG)">Municipal (gestión con ONG)</option>
                   <option value="CCI">CCI</option>
                   <option value="Jardin Maternal Privado">Jardin Maternal Privado</option>
                   <option value="Sala de 3">Sala de 3</option>
