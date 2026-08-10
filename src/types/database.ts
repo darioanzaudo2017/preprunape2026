@@ -30,6 +30,8 @@ export interface Database {
           prematuro: string | null
           semanas: number | null
           otras_características: string | null
+          origen_familia: string | null
+          otro_idioma: string | null
         }
         Insert: {
           idninos?: number
@@ -49,6 +51,8 @@ export interface Database {
           prematuro?: string | null
           semanas?: number | null
           otras_características?: string | null
+          origen_familia?: string | null
+          otro_idioma?: string | null
         }
         Update: {
           idninos?: number
@@ -68,6 +72,8 @@ export interface Database {
           prematuro?: string | null
           semanas?: number | null
           otras_características?: string | null
+          origen_familia?: string | null
+          otro_idioma?: string | null
         }
         Relationships: [
           {

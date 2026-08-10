@@ -41,7 +41,8 @@ export default function DashboardPage() {
         fecha_desde: null,
         fecha_hasta: null,
         p_localidad: isAgente && localidad ? localidad : null,
-        p_genero: null
+        p_genero: null,
+        p_espacio_cuidado: null
       })
       if (error) throw error
       // Supabase puede devolver el JSON envuelto en array con clave de función
@@ -78,7 +79,8 @@ export default function DashboardPage() {
         fecha_desde: null,
         fecha_hasta: null,
         p_localidad: isAgente && localidad ? localidad : null,
-        p_genero: null
+        p_genero: null,
+        p_espacio_cuidado: null
       })
       if (error) throw error
       return data ?? []
@@ -129,7 +131,8 @@ export default function DashboardPage() {
         p_localidad: isAgente && localidad ? localidad : null,
         fecha_desde: null,
         fecha_hasta: null,
-        p_genero: null
+        p_genero: null,
+        p_espacio_cuidado: null
       })
       if (error) throw error
       return (data ?? []).length as number

@@ -62,16 +62,17 @@ export default function NinosPage() {
       }
 
       // Traer formulario de la última prueba por niño
-      const { data: ultimasPruebas } = await supabase
+      const { data: ultimasPruebas } = await (supabase as any)
         .from('Prueba_pre_prunape')
         .select('idniño, Fecha, formulario')
         .order('Fecha', { ascending: false })
 
       const ultimaPruebaMap: Record<number, { fecha: string; formulario: string | null }> = {}
       if (ultimasPruebas) {
-        for (const p of ultimasPruebas) {
-          if (!ultimaPruebaMap[p['idniño']]) {
-            ultimaPruebaMap[p['idniño']] = { fecha: p.Fecha, formulario: p.formulario }
+        for (const p of ultimasPruebas as Array<{ 'idniño': number; Fecha: string; formulario: string | null }>) {
+          const idnino = p['idniño']
+          if (!ultimaPruebaMap[idnino]) {
+            ultimaPruebaMap[idnino] = { fecha: p.Fecha, formulario: p.formulario }
           }
         }
       }
