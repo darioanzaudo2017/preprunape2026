@@ -25,7 +25,8 @@ import {
   Home,
   Link2,
   Globe,
-  Languages
+  Languages,
+  Printer
 } from 'lucide-react'
 import SeguimientoPrunape from '../components/SeguimientoPrunape'
 import { FormularioHogar, useHogar } from '../features/hogar'
@@ -343,6 +344,154 @@ export default function NinoDetailPage() {
   const handleDeletePrueba = (idPrueba: number) => {
     if (window.confirm('¿Está seguro de que desea eliminar esta evaluación y todas sus respuestas?')) {
       deletePruebaMutation.mutate(idPrueba)
+    }
+  }
+
+  // PDF export state
+  const [isPdfLoading, setIsPdfLoading] = useState(false)
+  const [pdfData, setPdfData] = useState<Array<{
+    prueba: PruebaData
+    noPasa: Array<{ texto: string; categoria: string }>
+    edadCalculada: string
+  }> | null>(null)
+
+  const handleExportPdf = async () => {
+    if (!activePruebas.length) return
+    setIsPdfLoading(true)
+    try {
+      const results = await Promise.all(
+        activePruebas.map(async (prueba) => {
+          const { data: pruebaRaw } = await supabase
+            .from('Prueba_pre_prunape')
+            .select('*')
+            .eq('id_prueba', prueba.id_prueba)
+            .single()
+
+          const birthDate = pruebaRaw?.fechanacimiento || ''
+          const testDate = pruebaRaw?.Fecha || ''
+          const storedForm = (pruebaRaw?.formulario || '').trim()
+          const effectiveForm = storedForm
+            ? getNormalizedFormName(storedForm, birthDate, testDate)
+            : getNormalizedFormName(null, birthDate, testDate) || 'Form 1'
+
+          const { data: config } = await supabase
+            .from('config_formularios')
+            .select('*')
+            .eq('formulario', effectiveForm)
+            .maybeSingle()
+
+          const { data: rpcData } = await (supabase as any).rpc('ejecutar_consulta_prueba', {
+            p_id_prueba: prueba.id_prueba,
+            form: effectiveForm,
+            p_umbral: config?.max_no_pasa ?? 2
+          })
+
+          const noPasa = ((rpcData || []) as ResultadoFila[])
+            .filter(f => f.respuesta_texto !== 'Pasa')
+            .map(f => ({ texto: f.pregunta_texto, categoria: f.pregunta_categoria }))
+
+          const edadCalculada = birthDate && testDate ? calculateAge(birthDate, testDate) : '—'
+
+          return { prueba, noPasa, edadCalculada }
+        })
+      )
+      setPdfData(results)
+
+      // Build print HTML in a new window so page settings don't conflict with DashboardIndicadores
+      const win = window.open('', '_blank', 'width=900,height=700')
+      if (!win) return
+
+      const nombre = `${activeNino?.nombre || ''} ${activeNino?.apellido || ''}`.trim()
+      const fechaNac = activeNino?.fechaNacimiento || ''
+      const localidad = activeNino?.localidad || ''
+      const generado = new Date().toLocaleDateString('es-AR', {
+        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      })
+
+      const evaluacionesHtml = results.map((item, idx) => {
+        const resultadoColor = item.prueba.aprobado === 'Aprobado'
+          ? '#059669' : item.prueba.aprobado === 'No Aprobado' ? '#dc2626' : '#64748b'
+        const resultadoBg = item.prueba.aprobado === 'Aprobado'
+          ? '#f0fdf4' : item.prueba.aprobado === 'No Aprobado' ? '#fef2f2' : '#f8fafc'
+
+        const hilasNoPasa = item.noPasa.map(p => `
+          <tr>
+            <td style="padding:5px 10px;border-bottom:1px solid #fee2e2;font-size:11px;">${p.texto}</td>
+            <td style="padding:5px 10px;border-bottom:1px solid #fee2e2;font-size:11px;color:#64748b;">${p.categoria}</td>
+          </tr>`).join('')
+
+        const tablaHitos = item.noPasa.length > 0 ? `
+          <p style="font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:.05em;margin:8px 0 4px;">
+            Hitos No Pasa (${item.noPasa.length})
+          </p>
+          <table style="width:100%;border-collapse:collapse;border:1px solid #fca5a5;border-radius:6px;overflow:hidden;">
+            <thead>
+              <tr style="background:#fef2f2;">
+                <th style="text-align:left;padding:6px 10px;font-size:10px;color:#991b1b;font-weight:700;">Hito / Pregunta</th>
+                <th style="text-align:left;padding:6px 10px;font-size:10px;color:#991b1b;font-weight:700;width:140px;">Categoría</th>
+              </tr>
+            </thead>
+            <tbody>${hilasNoPasa}</tbody>
+          </table>` :
+          `<p style="font-size:11px;color:#059669;font-weight:600;">✓ Sin hitos No Pasa en esta evaluación</p>`
+
+        const obs = item.prueba.observacion && item.prueba.observacion !== 'Sin observación registrada.'
+          ? `<p style="font-size:11px;font-style:italic;color:#475569;background:#f8fafc;padding:8px 12px;border-radius:6px;border:1px solid #e2e8f0;margin:8px 0;">
+              Obs.: ${item.prueba.observacion}
+             </p>` : ''
+
+        return `
+          <div style="margin-bottom:24px;page-break-inside:avoid;">
+            <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;">
+              <div>
+                <p style="font-size:10px;font-weight:800;color:#94a3b8;text-transform:uppercase;letter-spacing:.05em;margin:0 0 2px;">
+                  Evaluación #${idx + 1}
+                </p>
+                <p style="font-size:13px;font-weight:700;margin:0;">
+                  ${item.prueba.fechaRealizacion} · ${item.prueba.formulario}
+                  ${item.edadCalculada ? ` · Edad: ${item.edadCalculada}` : ''}
+                </p>
+                ${item.prueba.espCuidado ? `<p style="font-size:11px;color:#64748b;margin:2px 0 0;">Espacio de cuidado: ${item.prueba.espCuidado}</p>` : ''}
+              </div>
+              <span style="font-size:12px;font-weight:800;padding:4px 14px;border-radius:20px;border:1px solid ${resultadoColor};background:${resultadoBg};color:${resultadoColor};white-space:nowrap;">
+                ${item.prueba.aprobado}
+              </span>
+            </div>
+            ${obs}
+            ${tablaHitos}
+            ${idx < results.length - 1 ? '<hr style="margin-top:20px;border:none;border-top:1px solid #e2e8f0;">' : ''}
+          </div>`
+      }).join('')
+
+      win.document.write(`<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Historial ${nombre}</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; color: #1e293b; background: white; padding: 40px; }
+    @page { size: A4 portrait; margin: 1.5cm; }
+    @media print { body { padding: 0; } }
+  </style>
+</head>
+<body>
+  <div style="border-bottom:2px solid #334155;padding-bottom:16px;margin-bottom:24px;">
+    <h1 style="font-size:18px;font-weight:800;">Historial de Evaluaciones — PrepPRUNAPE</h1>
+    <p style="font-size:13px;font-weight:600;margin-top:4px;">
+      ${nombre}${fechaNac ? ` · Fecha de nac.: ${fechaNac}` : ''}${localidad ? ` · ${localidad}` : ''}
+    </p>
+    <p style="font-size:11px;color:#94a3b8;margin-top:2px;">Generado: ${generado}</p>
+  </div>
+  ${evaluacionesHtml}
+  <script>window.onload = () => { window.print(); }</script>
+</body>
+</html>`)
+      win.document.close()
+    } catch (e) {
+      console.error('Error generando PDF:', e)
+    } finally {
+      setIsPdfLoading(false)
     }
   }
 
@@ -952,6 +1101,14 @@ export default function NinoDetailPage() {
               <Plus className="h-4 w-4" />
               Agregar Prueba
             </Link>
+            <button
+              onClick={handleExportPdf}
+              disabled={isPdfLoading || activePruebas.length === 0}
+              className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isPdfLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
+              {isPdfLoading ? 'Preparando...' : 'Exportar PDF'}
+            </button>
           </div>
 
           <div className="overflow-x-auto">
@@ -1855,6 +2012,88 @@ export default function NinoDetailPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── SECCIÓN SOLO PARA IMPRESIÓN / PDF ── */}
+      {pdfData && (
+        <div className="hidden print:block fixed inset-0 bg-white z-[9999] p-10 text-slate-800">
+          {/* Cabecera del informe */}
+          <div className="border-b-2 border-slate-300 pb-4 mb-6">
+            <h1 className="text-xl font-bold">Historial de Evaluaciones — PrepPRUNAPE</h1>
+            <p className="text-sm font-semibold mt-1">
+              {activeNino?.nombre} {activeNino?.apellido}
+              {activeNino?.fechaNacimiento ? ` · Fecha de nac.: ${activeNino.fechaNacimiento}` : ''}
+              {activeNino?.localidad ? ` · ${activeNino.localidad}` : ''}
+            </p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Generado: {new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+            </p>
+          </div>
+
+          {/* Una sección por evaluación */}
+          {pdfData.map((item, idx) => (
+            <div key={item.prueba.id_prueba} className="mb-8 break-inside-avoid">
+              {/* Cabecera de la evaluación */}
+              <div className="flex items-center gap-4 mb-3">
+                <div className="flex-1">
+                  <p className="text-xs font-extrabold uppercase text-slate-400 tracking-wider">Evaluación #{idx + 1}</p>
+                  <p className="text-sm font-bold text-slate-800">
+                    {item.prueba.fechaRealizacion} · {item.prueba.formulario}
+                    {item.edadCalculada ? ` · Edad: ${item.edadCalculada}` : ''}
+                  </p>
+                  {item.prueba.espCuidado && (
+                    <p className="text-xs text-slate-500">Espacio de cuidado: {item.prueba.espCuidado}</p>
+                  )}
+                </div>
+                <span className={`text-sm font-extrabold px-4 py-1 rounded-full border ${
+                  item.prueba.aprobado === 'Aprobado'
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                    : item.prueba.aprobado === 'No Aprobado'
+                    ? 'bg-red-50 text-red-700 border-red-200'
+                    : 'bg-slate-50 text-slate-600 border-slate-200'
+                }`}>
+                  {item.prueba.aprobado}
+                </span>
+              </div>
+
+              {/* Observaciones */}
+              {item.prueba.observacion && item.prueba.observacion !== 'Sin observación registrada.' && (
+                <p className="text-xs text-slate-600 mb-3 italic bg-slate-50 px-3 py-2 rounded border border-slate-100">
+                  Obs.: {item.prueba.observacion}
+                </p>
+              )}
+
+              {/* Hitos No Pasa */}
+              {item.noPasa.length > 0 ? (
+                <div>
+                  <p className="text-[10px] font-extrabold uppercase tracking-wider text-red-600 mb-1.5">
+                    Hitos No Pasa ({item.noPasa.length})
+                  </p>
+                  <table className="w-full text-xs border border-slate-200 rounded overflow-hidden">
+                    <thead>
+                      <tr className="bg-slate-100 text-slate-600">
+                        <th className="text-left px-3 py-1.5 font-bold">Hito / Pregunta</th>
+                        <th className="text-left px-3 py-1.5 font-bold w-36">Categoría</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {item.noPasa.map((p, i) => (
+                        <tr key={i} className="bg-red-50/40">
+                          <td className="px-3 py-1.5 font-medium">{p.texto}</td>
+                          <td className="px-3 py-1.5 text-slate-500">{p.categoria}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-xs text-emerald-600 font-semibold">✓ Sin hitos No Pasa en esta evaluación</p>
+              )}
+
+              {idx < pdfData.length - 1 && <hr className="mt-6 border-slate-200" />}
+            </div>
+          ))}
         </div>
       )}
     </div>

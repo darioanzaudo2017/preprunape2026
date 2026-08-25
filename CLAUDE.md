@@ -48,7 +48,7 @@ src/
 
 ## Base de Datos (Tablas principales)
 - **`users`:** Extensión del perfil de Auth (`iduser`, `display_name`, `DNI`, `rol`, `Localidad`, `estado`).
-- **`niños`:** Registro de NNyA (`idninos`, `nombre`, `fecha_nacimiento`, `pesoNac`, `prematuro`, `idAdulto`, `adultoresponsable`, etc.).
+- **`niños`:** Registro de NNyA (`idninos`, `nombre`, `fecha_nacimiento`, `pesoNac`, `prematuro`, `idAdulto`, `adultoresponsable`, `origen_familia`, `otro_idioma`, etc.). Columnas `origen_familia` y `otro_idioma` agregadas en 2026-08.
 - **`adultos`:** Padres/Tutores (`id`, `DNI`, `NombreyApellido`, `Parentezco`, `NivelEducativo`, `idNNyA`).
 - **`adultoyNNyA`:** Tabla de relación muchos a muchos entre adultos y niños.
 - **`hogar`:** Datos del hogar (`id`, `localidad`, `barrio`, `tipo_barrio`, `tipo_hogar`, `jefatura`, `cant_personas`).
@@ -65,24 +65,29 @@ src/
 - **`Localidad`:** Tabla de localidades disponibles para selección en formularios.
 
 ## Páginas principales
-- **`Dashboard.tsx`:** Resumen general con 5 cards (total, aprobados, no aprobados, sin evaluar, requieren PRUNAPE). Usa RPCs: `get_dashboard_resumen`, `get_dashboard_localidades`, `get_ninos_requieren_prunape`.
-- **`DashboardIndicadores.tsx`:** Tablero avanzado con gráficos, filtros por localidad/género/institución. Usa RPCs con 4 parámetros siempre: `p_localidad`, `p_institucion`, `p_genero`, `p_fecha_desde`.
-- **`Ninos.tsx`:** Listado de NNyA con cards, filtro de alerta PRUNAPE (2 pruebas no aprobadas consecutivas), búsqueda y paginación.
-- **`NinoDetail.tsx`:** Perfil completo: datos del niño, adulto responsable, historial de evaluaciones con modal de detalle, datos del hogar, seguimiento PRUNAPE. El modal de detalle usa `ejecutar_consulta_prueba` RPC y maneja pruebas antiguas sin `formulario` infiriendo el form por edad.
-- **`NuevaPrueba.tsx`:** Registro de evaluación con selección automática de formulario por edad, preguntas filtradas por intervalo.
+- **`Dashboard.tsx`:** Resumen general con 5 cards (total, aprobados, no aprobados, sin evaluar, requieren PRUNAPE). Usa RPCs: `get_dashboard_resumen`, `get_dashboard_localidades`, `get_ninos_requieren_prunape`, `get_rangos_etarios`. Pasa `p_espacio_cuidado: null` en todos excepto `get_dashboard_localidades` (que no tiene ese parámetro).
+- **`DashboardIndicadores.tsx`:** Tablero avanzado con gráficos, filtros por localidad/género/institución. Incluye tabla "Hitos Críticos No Pasa" via `get_preguntas_no_pasa`. Visible para todos los roles (agente_municipio ve solo su localidad). Tiene botón de impresión PDF con estilos `@media print`.
+- **`Ninos.tsx`:** Listado de NNyA con cards, columnas Fecha de Nacimiento / Última Evaluación / Formulario, filtro de alerta PRUNAPE (2 pruebas no aprobadas consecutivas), búsqueda y paginación. Query usa `(supabase as any)` por incompatibilidad de parser TypeScript con `ñ` en nombre de columna.
+- **`NinoDetail.tsx`:** Perfil completo: datos del niño (incluye `origen_familia` e `otro_idioma`), adulto responsable, historial de evaluaciones con modal de detalle, datos del hogar, seguimiento PRUNAPE. El modal de detalle usa `ejecutar_consulta_prueba` RPC y maneja pruebas antiguas sin `formulario` infiriendo el form por edad.
+- **`NuevoNino.tsx`:** Registro de NNyA con campos `origen_familia` (provincias AR + países LATAM, `<optgroup>`) e `otro_idioma` (checkboxes multi-selección, guardado como string separado por `, `). Modal de éxito post-registro con opciones "Ir al perfil" o "Volver al listado".
+- **`NuevaPrueba.tsx`:** Registro de evaluación con selección automática de formulario por edad, preguntas filtradas por intervalo. Opciones en Espacio de Cuidado: Jardín de Infantes, Centro de Desarrollo Infantil, Escuela Primaria, Hogar, Comedor Comunitario, Centro de Salud, Jardín Provincial, Jardines de Infantes Públicos, Municipal (gestión con ONG).
 - **`ConfigPage.tsx`:** Gestión de usuarios con email, estado (pendiente/Activo), rol. Usa RPC `get_users_with_email`.
 - **`EncuestaPublica.tsx`:** Formulario público de hogar en `/encuesta/:token`, sin login. Valida token via Edge Function `encuesta-hogar`.
 - **`PendienteAprobacion.tsx`:** Pantalla para usuarios con `estado='pendiente'` o `rol=null`.
 
 ## Funciones RPC relevantes
-- `get_dashboard_resumen(p_localidad, p_institucion, p_genero, p_fecha_desde)` — estadísticas generales.
-- `get_dashboard_localidades(p_localidad, p_institucion, p_genero, p_fecha_desde)` — métricas por localidad.
-- `get_ninos_requieren_prunape(p_localidad, p_institucion, p_genero, p_fecha_desde)` — niños con 2 pruebas no aprobadas consecutivas.
+- `get_dashboard_resumen(p_localidad, p_institucion, p_genero, p_fecha_desde, p_espacio_cuidado)` — estadísticas generales. Tiene dos versiones sobrecargadas (4 y 5 params); siempre pasar los 5 para evitar PGRST203.
+- `get_dashboard_localidades(p_localidad, p_institucion, p_genero, p_fecha_desde)` — métricas por localidad. **Solo 4 parámetros**, NO tiene `p_espacio_cuidado`.
+- `get_ninos_requieren_prunape(p_localidad, p_institucion, p_genero, p_fecha_desde, p_espacio_cuidado)` — niños con 2 pruebas no aprobadas consecutivas.
+- `get_rangos_etarios(p_localidad, p_institucion, p_genero, p_fecha_desde, p_espacio_cuidado)` — distribución por rango etario para el Dashboard.
+- `get_preguntas_no_pasa(p_localidad, p_institucion, p_genero, p_fecha_desde, p_espacio_cuidado)` — tabla "Hitos Críticos No Pasa" en Indicadores. SECURITY DEFINER para evitar timeout con agente_municipio. Usa `preguntas2.id_pregunta` y `idrespuestacom = 2` (No Pasa).
 - `ejecutar_consulta_prueba(p_id_prueba, form, p_umbral)` — devuelve respuestas con resultado pasa/no pasa.
 - `get_users_with_email()` — lista usuarios con email de auth.users (SECURITY DEFINER).
 - `get_user_rol()` — devuelve el rol del usuario actual (SECURITY DEFINER, SET row_security=off para evitar recursión RLS).
 
-**IMPORTANTE:** Siempre pasar los 4 parámetros explícitamente en RPCs de dashboard para evitar PGRST203 (ambigüedad de sobrecarga de funciones).
+**IMPORTANTE:** Siempre pasar todos los parámetros explícitamente en RPCs sobrecargadas para evitar PGRST203 (ambigüedad). La excepción es `get_dashboard_localidades` que solo acepta 4 parámetros — pasarle `p_espacio_cuidado` causa PGRST202.
+
+**Valores en `pregunta_list.idrespuestacom`:** 1 = Pasa, 2 = No Pasa, 3 = No Evaluable.
 
 ## Edge Functions (Supabase)
 - **`encuesta-hogar`:** Maneja GET (validar token) y POST (guardar datos de hogar). `verify_jwt: false` para acceso público. Token se pasa como query param `?token=...`.
@@ -101,6 +106,11 @@ src/
 - **Inferencia de formulario:** Las pruebas antiguas tienen `formulario=null`. Se infiere por edad con `getNormalizedFormName()`. Siempre usar `.maybeSingle()` (no `.single()`) al buscar en `config_formularios` para evitar error 406.
 - **SPA routing en Vercel:** `vercel.json` con rewrite `/(.*) → /index.html`.
 - **Agente municipio:** Su localidad es fija (no editable), se sincroniza desde `users.Localidad` via `useUserRole`.
+- **Columna `ñ` en Supabase:** El parser TypeScript de PostgREST falla con `ñ` en strings de `.select('idniño, ...')`. Solución: usar `(supabase as any).from(...)` y castear el resultado con `as Array<{...}>`.
+- **Timeout en agente_municipio:** RPCs con JOINs masivos sin `SECURITY DEFINER` ejecutan con permisos del usuario → RLS en cada JOIN → timeout. Toda RPC de Indicadores/Dashboard debe llevar `SECURITY DEFINER SET search_path = public`.
+- **Multi-select con React Hook Form:** Usar `watch()` + `setValue()`. Los valores seleccionados se almacenan como string separado por `, ` en columna `text`. Al leer, usar `.split(', ').filter(Boolean)`.
+- **Fechas timezone-safe:** Usar `formatDate()` de `src/lib/utils.ts` para evitar que las fechas aparezcan un día antes por el offset UTC-3 (`new Date(fecha + 'T12:00:00')`).
+- **Impresión PDF de Indicadores:** `@media print` en `index.css` con clases semánticas (`kpi-grid`, `charts-grid-3`, `charts-grid-2`), página A4 horizontal, sin scroll. No usar `window.print()` sin antes ocultar sidebar y header.
 
 ## Convenciones de Código
 - **Servicios:** Todo acceso directo a Supabase debe estructurarse en la carpeta `src/features/` o hooks específicos, evitando queries crudas en componentes de UI.
@@ -117,3 +127,5 @@ src/
 2. **Nunca** deshabilitar RLS (Row Level Security) en producción.
 3. **No usar** la clave `service_role` en el cliente web frontend.
 4. Las variables con prefijo `VITE_` se exponen públicamente en el frontend compilado; no incluir credenciales privadas.
+5. **Pre-commit hook** instalado en `.git/hooks/pre-commit`: bloquea commits con JWTs reales (detecta el prefijo estándar de tokens Base64). No eliminar.
+6. **`.gitignore`** cubre `.env`, `.env.local`, `.env.*.local`, `.env.development`, `.env.production`, `.env.staging`.

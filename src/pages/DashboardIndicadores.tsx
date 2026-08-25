@@ -163,6 +163,27 @@ export default function DashboardIndicadoresPage() {
     }
   })
 
+  // Query totales sin filtro — para mostrar "X de Y total" en las cards cuando hay filtros activos
+  const { data: resumenTotal } = useQuery<DashboardResumen | null>({
+    queryKey: ['dashboard-resumen-total'],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc('get_dashboard_resumen', {
+        fecha_desde: null,
+        fecha_hasta: null,
+        p_localidad: null,
+        p_genero: null,
+        p_espacio_cuidado: null
+      })
+      if (error) throw error
+      if (Array.isArray(data)) {
+        const row = data[0]
+        return (row?.get_dashboard_resumen ?? row) || null
+      }
+      return data || null
+    },
+    staleTime: 5 * 60 * 1000
+  })
+
   // 4. Query 2: get_preguntas_no_pasa — todos los filtros
   const { data: preguntasNoPasa = [], isLoading: isLoadingPreguntas } = useQuery<PreguntaNoPasaRow[]>({
     queryKey: ['preguntas-no-pasa-rpc', fechaDesde, fechaHasta, pGenero, pCategoria, activeLocalidad, pEspacio],
@@ -225,6 +246,17 @@ export default function DashboardIndicadoresPage() {
   }
 
   // 7. Data formatting helpers
+  const filtersLabel = useMemo(() => {
+    const parts: string[] = []
+    if (activeLocalidad) parts.push(activeLocalidad)
+    if (pGenero) parts.push(pGenero === 'Varon' ? 'Varón' : pGenero)
+    if (pEspacio) parts.push(pEspacio)
+    if (fechaDesde && fechaHasta) parts.push(`${formatDate(fechaDesde)} – ${formatDate(fechaHasta)}`)
+    else if (fechaDesde) parts.push(`Desde ${formatDate(fechaDesde)}`)
+    else if (fechaHasta) parts.push(`Hasta ${formatDate(fechaHasta)}`)
+    return parts
+  }, [activeLocalidad, pGenero, pEspacio, fechaDesde, fechaHasta])
+
   const totalPruebas = resumen?.total_pruebas ?? 0
   const passPercent = totalPruebas > 0 ? Math.round(((resumen?.total_aprobados ?? 0) / totalPruebas) * 100) : 0
   const failPercent = totalPruebas > 0 ? Math.round(((resumen?.total_no_aprobados ?? 0) / totalPruebas) * 100) : 0
@@ -510,9 +542,23 @@ export default function DashboardIndicadoresPage() {
                 {isLoadingResumen ? (
                   <div className="h-8 w-20 bg-slate-200 rounded animate-pulse"></div>
                 ) : (
-                  <div className="text-3xl font-extrabold text-brand-navy font-display">{resumen?.total_registrados ?? 0}</div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-extrabold text-brand-navy font-display">{resumen?.total_registrados ?? 0}</span>
+                    {filtersLabel.length > 0 && resumenTotal && (resumenTotal.total_registrados ?? 0) !== (resumen?.total_registrados ?? 0) && (
+                      <span className="text-[10px] font-semibold text-slate-400">de {resumenTotal.total_registrados}</span>
+                    )}
+                  </div>
                 )}
                 <p className="text-[9px] text-slate-400 font-semibold mt-1">Total NNyA en el sistema</p>
+                {filtersLabel.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {filtersLabel.map((f, i) => (
+                      <span key={i} className="inline-flex items-center gap-0.5 text-[8px] font-bold bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full border border-slate-200">
+                        <Filter className="h-2 w-2" />{f}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -525,9 +571,23 @@ export default function DashboardIndicadoresPage() {
                 {isLoadingResumen ? (
                   <div className="h-8 w-20 bg-slate-200 rounded animate-pulse"></div>
                 ) : (
-                  <div className="text-3xl font-extrabold text-brand-navy font-display">{resumen?.total_ninos ?? 0}</div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-extrabold text-brand-navy font-display">{resumen?.total_ninos ?? 0}</span>
+                    {filtersLabel.length > 0 && resumenTotal && (resumenTotal.total_ninos ?? 0) !== (resumen?.total_ninos ?? 0) && (
+                      <span className="text-[10px] font-semibold text-slate-400">de {resumenTotal.total_ninos}</span>
+                    )}
+                  </div>
                 )}
                 <p className="text-[9px] text-slate-400 font-semibold mt-1">Con al menos una evaluación</p>
+                {filtersLabel.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {filtersLabel.map((f, i) => (
+                      <span key={i} className="inline-flex items-center gap-0.5 text-[8px] font-bold bg-blue-50 text-blue-500 px-1.5 py-0.5 rounded-full border border-blue-100">
+                        <Filter className="h-2 w-2" />{f}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -540,9 +600,23 @@ export default function DashboardIndicadoresPage() {
                 {isLoadingResumen ? (
                   <div className="h-8 w-20 bg-slate-200 rounded animate-pulse"></div>
                 ) : (
-                  <div className="text-3xl font-extrabold text-brand-navy font-display">{totalPruebas}</div>
+                  <div className="flex items-baseline gap-1.5">
+                    <span className="text-3xl font-extrabold text-brand-navy font-display">{totalPruebas}</span>
+                    {filtersLabel.length > 0 && resumenTotal && (resumenTotal.total_pruebas ?? 0) !== totalPruebas && (
+                      <span className="text-[10px] font-semibold text-slate-400">de {resumenTotal.total_pruebas}</span>
+                    )}
+                  </div>
                 )}
                 <p className="text-[9px] text-slate-400 font-semibold mt-1">Evaluaciones realizadas</p>
+                {filtersLabel.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {filtersLabel.map((f, i) => (
+                      <span key={i} className="inline-flex items-center gap-0.5 text-[8px] font-bold bg-indigo-50 text-indigo-500 px-1.5 py-0.5 rounded-full border border-indigo-100">
+                        <Filter className="h-2 w-2" />{f}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -561,6 +635,15 @@ export default function DashboardIndicadoresPage() {
                   </div>
                 )}
                 <p className="text-[9px] text-slate-400 font-semibold mt-1">Superaron todos los hitos</p>
+                {filtersLabel.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {filtersLabel.map((f, i) => (
+                      <span key={i} className="inline-flex items-center gap-0.5 text-[8px] font-bold bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded-full border border-emerald-100">
+                        <Filter className="h-2 w-2" />{f}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -579,6 +662,15 @@ export default function DashboardIndicadoresPage() {
                   </div>
                 )}
                 <p className="text-[9px] text-slate-400 font-semibold mt-1">No pasaron la pre-PRUNAPE</p>
+                {filtersLabel.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {filtersLabel.map((f, i) => (
+                      <span key={i} className="inline-flex items-center gap-0.5 text-[8px] font-bold bg-red-50 text-red-500 px-1.5 py-0.5 rounded-full border border-red-100">
+                        <Filter className="h-2 w-2" />{f}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -590,6 +682,15 @@ export default function DashboardIndicadoresPage() {
               <div className="mt-2">
                 <div className="text-3xl font-extrabold text-white font-display">{prunapeData.length}</div>
                 <p className="text-[9px] text-violet-200 font-semibold mt-1">2 No Aprobadas consecutivas</p>
+                {filtersLabel.length > 0 && (
+                  <div className="mt-1.5 flex flex-wrap gap-1">
+                    {filtersLabel.map((f, i) => (
+                      <span key={i} className="inline-flex items-center gap-0.5 text-[8px] font-bold bg-white/20 text-white px-1.5 py-0.5 rounded-full border border-white/30">
+                        <Filter className="h-2 w-2" />{f}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
 
