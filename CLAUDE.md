@@ -68,7 +68,7 @@ src/
 - **`Dashboard.tsx`:** Resumen general con 5 cards (total, aprobados, no aprobados, sin evaluar, requieren PRUNAPE). Usa RPCs: `get_dashboard_resumen`, `get_dashboard_localidades`, `get_ninos_requieren_prunape`, `get_rangos_etarios`. Pasa `p_espacio_cuidado: null` en todos excepto `get_dashboard_localidades` (que no tiene ese parámetro).
 - **`DashboardIndicadores.tsx`:** Tablero avanzado con gráficos, filtros por localidad/género/institución. Incluye tabla "Hitos Críticos No Pasa" via `get_preguntas_no_pasa`. Visible para todos los roles (agente_municipio ve solo su localidad). Tiene botón de impresión PDF con estilos `@media print`.
 - **`Ninos.tsx`:** Listado de NNyA con cards, columnas Fecha de Nacimiento / Última Evaluación / Formulario, filtro de alerta PRUNAPE (2 pruebas no aprobadas consecutivas), búsqueda y paginación. Query usa `(supabase as any)` por incompatibilidad de parser TypeScript con `ñ` en nombre de columna.
-- **`NinoDetail.tsx`:** Perfil completo: datos del niño (incluye `origen_familia` e `otro_idioma`), adulto responsable, historial de evaluaciones con modal de detalle, datos del hogar, seguimiento PRUNAPE. El modal de detalle usa `ejecutar_consulta_prueba` RPC y maneja pruebas antiguas sin `formulario` infiriendo el form por edad.
+- **`NinoDetail.tsx`:** Perfil completo: datos del niño (incluye `origen_familia` e `otro_idioma`), adulto responsable, historial de evaluaciones con modal de detalle, datos del hogar, seguimiento PRUNAPE. El modal de detalle usa `ejecutar_consulta_prueba` RPC y maneja pruebas antiguas sin `formulario` infiriendo el form por edad. Tiene botón "Exportar PDF" que abre una nueva ventana con el historial completo de evaluaciones + hitos No Pasa por categoría (A4 portrait, `window.open()` para no conflictuar con el CSS de impresión de Indicadores).
 - **`NuevoNino.tsx`:** Registro de NNyA con campos `origen_familia` (provincias AR + países LATAM, `<optgroup>`) e `otro_idioma` (checkboxes multi-selección, guardado como string separado por `, `). Modal de éxito post-registro con opciones "Ir al perfil" o "Volver al listado".
 - **`NuevaPrueba.tsx`:** Registro de evaluación con selección automática de formulario por edad, preguntas filtradas por intervalo. Opciones en Espacio de Cuidado: Jardín de Infantes, Centro de Desarrollo Infantil, Escuela Primaria, Hogar, Comedor Comunitario, Centro de Salud, Jardín Provincial, Jardines de Infantes Públicos, Municipal (gestión con ONG).
 - **`ConfigPage.tsx`:** Gestión de usuarios con email, estado (pendiente/Activo), rol. Usa RPC `get_users_with_email`.
@@ -95,11 +95,15 @@ src/
 
 ## API de Datos Externos
 - **Endpoint:** `https://wbhshrxibzleubcsistn.supabase.co/functions/v1/datos-externos?token=<uuid>`
-- **Vista:** `vista_datos_externos` — una fila por pregunta respondida, joinea niños + adultos + hogar + hogar_snapshot + pruebas + preguntas + respuestas. Excluye datos identificatorios.
+- **Vista:** `vista_datos_externos` — una fila por pregunta respondida, joinea niños + adultos + hogar + hogar_snapshot + pruebas + preguntas + respuestas. Excluye datos identificatorios (nombre, DNI, teléfono, dirección, **localidad**). Excluye la localidad "prueba". Cubre todos los municipios reales.
+- **Columnas excluidas intencionalmente:** `nino_localidad`, `hogar_localidad` — la localidad no se expone a organizaciones externas.
+- **Modificar la vista:** Requiere `DROP VIEW` + `CREATE VIEW` (PostgreSQL no permite quitar columnas con `CREATE OR REPLACE`).
 - **Tabla `organizaciones`:** `id`, `nombre`, `token` (UUID auto), `localidad_permitida` (NULL = todas), `activo`. Gestionar desde Supabase SQL Editor.
 - **Crear organización:** `INSERT INTO organizaciones (nombre, localidad_permitida) VALUES ('Nombre', 'Localidad') RETURNING nombre, token;`
 - **Revocar acceso:** `UPDATE organizaciones SET activo = false WHERE id = X;`
+- **Ver organizaciones existentes:** `SELECT nombre, token, localidad_permitida, activo FROM organizaciones;`
 - **Estructura respuesta:** `{ organizacion, pagina, page_size, total_registros, datos[] }`. Agrupar por `nino_id + prueba_id` para reconstruir la jerarquía niño → prueba → preguntas.
+- **Parámetros opcionales:** `page`, `page_size` (máx 5000), `localidad` (filtro adicional por localidad aunque no se devuelva en los datos).
 
 ## Patrones técnicos importantes
 - **RLS recursivo:** La función `get_user_rol()` usa `SET row_security = off` en plpgsql para evitar recursión al consultar `public.users`.
@@ -111,6 +115,8 @@ src/
 - **Multi-select con React Hook Form:** Usar `watch()` + `setValue()`. Los valores seleccionados se almacenan como string separado por `, ` en columna `text`. Al leer, usar `.split(', ').filter(Boolean)`.
 - **Fechas timezone-safe:** Usar `formatDate()` de `src/lib/utils.ts` para evitar que las fechas aparezcan un día antes por el offset UTC-3 (`new Date(fecha + 'T12:00:00')`).
 - **Impresión PDF de Indicadores:** `@media print` en `index.css` con clases semánticas (`kpi-grid`, `charts-grid-3`, `charts-grid-2`), página A4 horizontal, sin scroll. No usar `window.print()` sin antes ocultar sidebar y header.
+- **Impresión PDF de NinoDetail:** Usar `window.open()` + `win.document.write()` para abrir el reporte en ventana nueva con su propio `@page { size: A4 portrait }`. Evita conflictos con los estilos `@media print` globales de Indicadores.
+- **Modificar vistas PostgreSQL:** `CREATE OR REPLACE VIEW` no permite quitar columnas — usar `DROP VIEW IF EXISTS` + `CREATE VIEW` en la misma migración.
 
 ## Convenciones de Código
 - **Servicios:** Todo acceso directo a Supabase debe estructurarse en la carpeta `src/features/` o hooks específicos, evitando queries crudas en componentes de UI.
