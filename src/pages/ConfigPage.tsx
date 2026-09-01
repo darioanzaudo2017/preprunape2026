@@ -804,7 +804,6 @@ export default function ConfigPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {links.map(({ titulo, descripcion, url, color, icon }) => {
                   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(url)}`
-                  const isCopied = copied[-1] // placeholder, usamos el copyToken con id negativo
                   return (
                     <div key={url} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5">
                       {/* Header */}
