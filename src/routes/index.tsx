@@ -17,7 +17,6 @@ import DashboardIndicadoresPage from '../pages/DashboardIndicadores'
 import PendienteAprobacion from '../pages/PendienteAprobacion'
 import EncuestaPublica from '../pages/EncuestaPublica'
 import DashboardExternoPage from '../pages/DashboardExterno'
-import OrgAccesoPage from '../pages/OrgAcceso'
 import { LayoutDashboard, Users, MapPin, LogOut, HeartPulse, ShieldCheck, Settings, Network, BarChart2 } from 'lucide-react'
 
 // ProtectedRoute Component
@@ -204,7 +203,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/org',
-    element: <OrgAccesoPage />,
+    element: <DashboardExternoPage />,
   },
   {
     path: '/org/:token',

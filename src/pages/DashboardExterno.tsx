@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useMemo, useState, useRef, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   ResponsiveContainer, PieChart, Pie, Cell, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend
 } from 'recharts'
-import { Users, FileSpreadsheet, CheckCircle2, AlertTriangle, Filter, X, HeartPulse, BarChart2 } from 'lucide-react'
+import { Users, FileSpreadsheet, CheckCircle2, AlertTriangle, Filter, X, HeartPulse, BarChart2, KeyRound, Loader2, AlertCircle } from 'lucide-react'
 
 const API_BASE = 'https://wbhshrxibzleubcsistn.supabase.co/functions/v1/datos-externos'
 
@@ -70,8 +70,104 @@ const CustomTooltip = ({ active, payload }: any) => {
   )
 }
 
+function TokenModal({ onSuccess }: { onSuccess: (token: string) => void }) {
+  const [value, setValue] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
+  const inputRef = useRef<HTMLInputElement>(null)
+
+  useEffect(() => { inputRef.current?.focus() }, [])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    const t = value.trim()
+    if (!t) return
+    setLoading(true)
+    setError('')
+    try {
+      const res = await fetch(`${API_BASE}?token=${t}&page=1&page_size=1`)
+      if (res.status === 401 || res.status === 403) {
+        setError('Token inválido o sin acceso. Verificá el código enviado.')
+        return
+      }
+      if (!res.ok) {
+        setError('No se pudo verificar el token. Intentá nuevamente.')
+        return
+      }
+      const json = await res.json()
+      if (!json.datos) {
+        setError('Respuesta inesperada del servidor.')
+        return
+      }
+      onSuccess(t)
+    } catch {
+      setError('Error de conexión. Verificá tu acceso a internet.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-7 space-y-5 animate-in fade-in zoom-in-95 duration-200">
+        {/* Logo */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#1e293b] shadow-md">
+            <HeartPulse className="h-7 w-7 text-teal-400" />
+          </div>
+          <div>
+            <h2 className="text-base font-extrabold text-slate-800">PrepPRUNAPE</h2>
+            <p className="text-xs text-slate-400">Portal de Datos para Organizaciones</p>
+          </div>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-xs font-bold text-slate-600 flex items-center gap-1.5">
+              <KeyRound className="h-3.5 w-3.5 text-indigo-500" />
+              Ingresá tu código de acceso
+            </label>
+            <input
+              ref={inputRef}
+              type="text"
+              value={value}
+              onChange={e => { setValue(e.target.value); setError('') }}
+              placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+              className="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-indigo-300 focus:border-indigo-400 transition-all placeholder:text-slate-300"
+              autoComplete="off"
+              spellCheck={false}
+            />
+          </div>
+
+          {error && (
+            <div className="flex items-start gap-2 text-xs text-red-600 bg-red-50 border border-red-100 rounded-xl px-3 py-2.5">
+              <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              <span>{error}</span>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={loading || !value.trim()}
+            className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold flex items-center justify-center gap-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+          >
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />}
+            {loading ? 'Verificando…' : 'Acceder al Tablero'}
+          </button>
+        </form>
+
+        <p className="text-center text-[10px] text-slate-400">
+          Defensoría de NNyA · Córdoba · Datos anonimizados
+        </p>
+      </div>
+    </div>
+  )
+}
+
 export default function DashboardExternoPage() {
   const { token } = useParams<{ token: string }>()
+  const navigate = useNavigate()
   const [pGenero, setPGenero] = useState('')
   const [pFormulario, setPFormulario] = useState('')
   const [pEspacio, setPEspacio] = useState('')
@@ -213,6 +309,12 @@ export default function DashboardExternoPage() {
 
   const hasFilters = !!(pMunicipio || pGenero || pFormulario || pEspacio)
 
+  if (!token) return (
+    <div className="min-h-screen bg-[#f0f4f8]">
+      <TokenModal onSuccess={t => navigate(`/org/${t}`)} />
+    </div>
+  )
+
   if (isLoading) return (
     <div className="min-h-screen bg-[#f0f4f8] flex flex-col items-center justify-center gap-4">
       <HeartPulse className="h-10 w-10 animate-pulse text-indigo-500" />
@@ -220,7 +322,7 @@ export default function DashboardExternoPage() {
     </div>
   )
 
-  if (error || !token) return (
+  if (error) return (
     <div className="min-h-screen bg-[#f0f4f8] flex flex-col items-center justify-center gap-4 p-8 text-center">
       <BarChart2 className="h-10 w-10 text-slate-400" />
       <h2 className="text-lg font-bold text-slate-700">Token inválido o sin acceso</h2>
