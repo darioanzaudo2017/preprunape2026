@@ -28,6 +28,9 @@ interface NinoApiData {
   genero?: string;
   edad_meses?: number;
   total_pruebas: number;
+  hitos_no_pasa?: Record<string, string[]>;
+  ultimo_resultado?: string;
+  ultima_fecha?: string;
 }
 
 interface AdultoApiResponse {
@@ -638,33 +641,107 @@ export default function ConsultaFamiliar() {
 
               {/* Resumen del Niño Seleccionado */}
               {ninoSeleccionado && (
-                <div className="mt-6 p-5 rounded-2xl bg-teal-50/60 border border-teal-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="w-12 h-12 rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0">
-                      {ninoSeleccionado.nombre.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <h2 className="text-lg font-bold text-slate-900">
-                        {ninoSeleccionado.nombre}
-                      </h2>
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 mt-0.5">
-                        {ninoSeleccionado.edad_meses !== undefined && (
-                          <span className="inline-flex items-center gap-1 font-medium bg-white px-2 py-0.5 rounded-md border border-teal-200/60 text-teal-800">
-                            <Calendar className="w-3 h-3 text-teal-600" />
-                            {formatEdadMeses(ninoSeleccionado.edad_meses)}
-                          </span>
-                        )}
-                        <span className="inline-flex items-center gap-1 font-medium bg-white px-2 py-0.5 rounded-md border border-teal-200/60 text-teal-800">
-                          <Award className="w-3 h-3 text-teal-600" />
-                          {ninoSeleccionado.total_pruebas}{' '}
-                          {ninoSeleccionado.total_pruebas === 1 ? 'evaluación realizada' : 'evaluaciones realizadas'}
-                        </span>
+                <div className="mt-6 space-y-5">
+                  <div className="p-5 rounded-2xl bg-teal-50/60 border border-teal-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="w-12 h-12 rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0">
+                        {ninoSeleccionado.nombre.charAt(0).toUpperCase()}
                       </div>
+                      <div>
+                        <h2 className="text-lg font-bold text-slate-900">
+                          {ninoSeleccionado.nombre}
+                        </h2>
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 mt-0.5">
+                          {ninoSeleccionado.edad_meses !== undefined && (
+                            <span className="inline-flex items-center gap-1 font-medium bg-white px-2 py-0.5 rounded-md border border-teal-200/60 text-teal-800">
+                              <Calendar className="w-3 h-3 text-teal-600" />
+                              {formatEdadMeses(ninoSeleccionado.edad_meses)}
+                            </span>
+                          )}
+                          <span className="inline-flex items-center gap-1 font-medium bg-white px-2 py-0.5 rounded-md border border-teal-200/60 text-teal-800">
+                            <Award className="w-3 h-3 text-teal-600" />
+                            {ninoSeleccionado.total_pruebas}{' '}
+                            {ninoSeleccionado.total_pruebas === 1 ? 'evaluación realizada' : 'evaluaciones realizadas'}
+                          </span>
+                          {ninoSeleccionado.ultima_fecha && (
+                            <span className="inline-flex items-center gap-1 font-medium bg-white px-2 py-0.5 rounded-md border border-teal-200/60 text-teal-800">
+                              Fecha: {ninoSeleccionado.ultima_fecha}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 self-start sm:self-center">
+                      {ninoSeleccionado.ultimo_resultado && (
+                        ninoSeleccionado.ultimo_resultado === 'Aprobado' ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-100 text-emerald-800 font-semibold text-xs border border-emerald-200">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                            Aprobado
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-amber-100 text-amber-900 font-semibold text-xs border border-amber-200">
+                            <HeartPulse className="w-3.5 h-3.5 text-amber-600" />
+                            {ninoSeleccionado.ultimo_resultado}
+                          </span>
+                        )
+                      )}
+                      <span className="text-xs text-teal-900 bg-teal-100/70 py-1.5 px-3 rounded-xl font-medium">
+                        PrepPRUNAPE
+                      </span>
                     </div>
                   </div>
 
-                  <div className="text-xs text-teal-900 bg-teal-100/70 py-1.5 px-3 rounded-xl self-start sm:self-center font-medium">
-                    Evaluación PrepPRUNAPE
+                  {/* Sección: Estos son los hitos que podemos trabajar juntos */}
+                  <div className="p-5 sm:p-6 rounded-2xl bg-indigo-50/50 border border-indigo-100">
+                    <div className="flex items-center gap-2.5 mb-2">
+                      <div className="p-1.5 rounded-lg bg-indigo-600 text-white">
+                        <Users className="w-4 h-4" />
+                      </div>
+                      <h3 className="text-base sm:text-lg font-bold text-indigo-950">
+                        Estos son los hitos que podemos trabajar juntos
+                      </h3>
+                    </div>
+
+                    {ninoSeleccionado.hitos_no_pasa &&
+                    Object.keys(ninoSeleccionado.hitos_no_pasa).length > 0 &&
+                    Object.values(ninoSeleccionado.hitos_no_pasa).some((arr) => arr && arr.length > 0) ? (
+                      <div>
+                        <p className="text-xs sm:text-sm text-slate-600 mb-4">
+                          Son habilidades que tu hijo/a está desarrollando y que podemos fortalecer con juegos en el hogar:
+                        </p>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                          {Object.entries(ninoSeleccionado.hitos_no_pasa).map(([area, hitos]) => {
+                            if (!hitos || hitos.length === 0) return null;
+                            return (
+                              <div
+                                key={area}
+                                className="bg-white p-4 rounded-xl border border-indigo-100/80 shadow-xs"
+                              >
+                                <h4 className="text-xs font-bold uppercase tracking-wider text-indigo-700 mb-2">
+                                  Área: {area}
+                                </h4>
+                                <ul className="space-y-1.5 text-sm text-slate-700">
+                                  {hitos.map((hito, hIdx) => (
+                                    <li key={hIdx} className="flex items-start gap-2">
+                                      <span className="text-indigo-500 font-bold leading-none mt-0.5">•</span>
+                                      <span className="leading-snug">{hito}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-2 flex items-center gap-3 p-4 rounded-xl bg-emerald-50/80 border border-emerald-200 text-emerald-900">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600 flex-shrink-0" />
+                        <span className="text-sm font-medium">
+                          ¡Muy bien! No hay hitos pendientes registrados.
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}
