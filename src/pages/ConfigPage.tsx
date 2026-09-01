@@ -17,7 +17,13 @@ import {
   Save,
   X,
   MapPin,
-  AlertTriangle
+  AlertTriangle,
+  Network,
+  Copy,
+  Check,
+  Link2,
+  ToggleLeft,
+  ToggleRight
 } from 'lucide-react'
 import type { UserRol } from '../store/authStore'
 
@@ -43,12 +49,23 @@ interface ConfigFormularioData {
   updated_at: string
 }
 
+interface OrgData {
+  id: number
+  nombre: string
+  token: string
+  localidad_permitida: string | null
+  activo: boolean
+}
+
 export default function ConfigPage() {
   const { isAdmin } = useUserRole()
   const queryClient = useQueryClient()
 
-  // Tabs State: 'usuarios' | 'localidades' | 'formularios'
-  const [activeTab, setActiveTab] = useState<'usuarios' | 'localidades' | 'formularios'>('usuarios')
+  // Tabs State
+  const [activeTab, setActiveTab] = useState<'usuarios' | 'localidades' | 'formularios' | 'organizaciones'>('usuarios')
+
+  // Copy feedback state: orgId → boolean
+  const [copied, setCopied] = useState<Record<number, boolean>>({})
 
   // Search Filter for Users list
   const [userSearch, setUserSearch] = useState('')
@@ -130,6 +147,43 @@ export default function ConfigPage() {
       return data as ConfigFormularioData[]
     }
   })
+
+  // 4. Fetch Organizaciones
+  const { data: orgsList, isLoading: isLoadingOrgs } = useQuery<OrgData[]>({
+    queryKey: ['organizaciones-list'],
+    enabled: !!isAdmin,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('organizaciones')
+        .select('id, nombre, token, localidad_permitida, activo')
+        .order('nombre', { ascending: true })
+      if (error) throw error
+      return (data ?? []) as OrgData[]
+    }
+  })
+
+  // Toggle org activo
+  const toggleOrgMutation = useMutation({
+    mutationFn: async ({ id, activo }: { id: number; activo: boolean }) => {
+      const { error } = await supabase
+        .from('organizaciones')
+        .update({ activo })
+        .eq('id', id)
+      if (error) throw error
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['organizaciones-list'] })
+    },
+    onError: (err: any) => {
+      toast.error(err.message || 'Error al actualizar la organización.')
+    }
+  })
+
+  const copyToken = (id: number, token: string) => {
+    navigator.clipboard.writeText(token)
+    setCopied(prev => ({ ...prev, [id]: true }))
+    setTimeout(() => setCopied(prev => ({ ...prev, [id]: false })), 2000)
+  }
 
   // Calculate user count per localidad
   const getUserCountForLocalidad = (locName: string): number => {
@@ -254,7 +308,7 @@ export default function ConfigPage() {
   }
 
   // Loading indicator for background dependencies
-  const isGlobalLoading = isLoadingUsers || isLoadingLocalidades || isLoadingConfigs
+  const isGlobalLoading = isLoadingUsers || isLoadingLocalidades || isLoadingConfigs || isLoadingOrgs
 
   // Filtered users list
   const filteredUsers = (usersList || []).filter(u => {
@@ -312,6 +366,16 @@ export default function ConfigPage() {
           }`}
         >
           <Sliders className="h-4 w-4" /> Config. de Formularios
+        </button>
+        <button
+          onClick={() => setActiveTab('organizaciones')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'organizaciones'
+              ? 'bg-primary text-on-primary shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50'
+          }`}
+        >
+          <Network className="h-4 w-4" /> Organizaciones
         </button>
       </nav>
 
@@ -602,6 +666,103 @@ export default function ConfigPage() {
                     </div>
                   )
                 })}
+              </div>
+            </div>
+          )}
+
+          {/* TAB 4: ORGANIZACIONES */}
+          {activeTab === 'organizaciones' && (
+            <div className="space-y-4">
+              {/* Info banner */}
+              <div className="bg-indigo-50 border border-indigo-200 rounded-2xl p-4 flex items-start gap-3">
+                <Link2 className="h-4 w-4 text-indigo-500 shrink-0 mt-0.5" />
+                <div className="text-xs text-indigo-700 leading-relaxed">
+                  <span className="font-bold">Link de acceso público:</span>{' '}
+                  <span className="font-mono bg-indigo-100 px-1.5 py-0.5 rounded">
+                    {window.location.origin}/org/
+                  </span>
+                  {' '}— Las organizaciones ingresan con su token en el modal. Para agregar o revocar organizaciones, usá el Supabase SQL Editor.
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl shadow-sm border border-outline-variant/30 overflow-hidden">
+                <div className="p-5 border-b border-slate-100 bg-slate-50">
+                  <h3 className="text-base font-bold text-on-surface font-display flex items-center gap-2">
+                    <Network className="h-4 w-4 text-primary" /> Organizaciones con Acceso al Portal
+                  </h3>
+                </div>
+
+                {(orgsList ?? []).length === 0 ? (
+                  <div className="p-10 text-center text-slate-400 text-sm">
+                    No hay organizaciones configuradas. Agregá una desde el Supabase SQL Editor con:<br />
+                    <code className="text-xs font-mono bg-slate-100 px-2 py-1 rounded mt-2 inline-block">
+                      INSERT INTO organizaciones (nombre) VALUES ('Nombre Org') RETURNING nombre, token;
+                    </code>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left">
+                      <thead className="bg-[#545f73] text-white">
+                        <tr>
+                          <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider pl-8">Organización</th>
+                          <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider">Token de Acceso</th>
+                          <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider">Municipio</th>
+                          <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-center">Estado</th>
+                          <th className="px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-center">Acceso</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100">
+                        {(orgsList ?? []).map(org => (
+                          <tr key={org.id} className={`hover:bg-slate-50 transition-colors ${!org.activo ? 'opacity-50' : ''}`}>
+                            <td className="px-6 py-4 pl-8">
+                              <span className="text-sm font-bold text-slate-800">{org.nombre}</span>
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-mono text-slate-500 truncate max-w-[220px]">{org.token}</span>
+                                <button
+                                  onClick={() => copyToken(org.id, org.token)}
+                                  className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 text-[10px] font-bold transition-colors"
+                                  title="Copiar token"
+                                >
+                                  {copied[org.id]
+                                    ? <><Check className="h-3 w-3 text-emerald-500" /> Copiado</>
+                                    : <><Copy className="h-3 w-3" /> Copiar</>
+                                  }
+                                </button>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-sm text-slate-500">
+                              {org.localidad_permitida ?? <span className="text-xs text-slate-400 italic">Todos los municipios</span>}
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <span className={`inline-flex px-2.5 py-1 rounded-full text-[10px] font-bold uppercase ${
+                                org.activo
+                                  ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                                  : 'bg-red-50 text-red-500 border border-red-200'
+                              }`}>
+                                {org.activo ? 'Activo' : 'Inactivo'}
+                              </span>
+                            </td>
+                            <td className="px-6 py-4 text-center">
+                              <button
+                                onClick={() => toggleOrgMutation.mutate({ id: org.id, activo: !org.activo })}
+                                disabled={toggleOrgMutation.isPending}
+                                className="flex items-center justify-center mx-auto text-slate-400 hover:text-primary transition-colors"
+                                title={org.activo ? 'Desactivar acceso' : 'Activar acceso'}
+                              >
+                                {org.activo
+                                  ? <ToggleRight className="h-6 w-6 text-emerald-500" />
+                                  : <ToggleLeft className="h-6 w-6 text-slate-400" />
+                                }
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </div>
           )}
