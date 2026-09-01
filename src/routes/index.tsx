@@ -17,6 +17,7 @@ import DashboardIndicadoresPage from '../pages/DashboardIndicadores'
 import PendienteAprobacion from '../pages/PendienteAprobacion'
 import EncuestaPublica from '../pages/EncuestaPublica'
 import DashboardExternoPage from '../pages/DashboardExterno'
+import ConsultaFamiliar from '../pages/ConsultaFamiliar'
 import { LayoutDashboard, Users, MapPin, LogOut, HeartPulse, ShieldCheck, Settings, Network, BarChart2 } from 'lucide-react'
 
 // ProtectedRoute Component
@@ -200,6 +201,10 @@ export const router = createBrowserRouter([
   {
     path: '/encuesta/:token',
     element: <EncuestaPublica />,
+  },
+  {
+    path: '/consulta',
+    element: <ConsultaFamiliar />,
   },
   {
     path: '/org',
