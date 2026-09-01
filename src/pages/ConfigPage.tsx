@@ -153,7 +153,7 @@ export default function ConfigPage() {
     queryKey: ['organizaciones-list'],
     enabled: !!isAdmin,
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('organizaciones')
         .select('id, nombre, token, localidad_permitida, activo')
         .order('nombre', { ascending: true })
@@ -165,7 +165,7 @@ export default function ConfigPage() {
   // Toggle org activo
   const toggleOrgMutation = useMutation({
     mutationFn: async ({ id, activo }: { id: number; activo: boolean }) => {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('organizaciones')
         .update({ activo })
         .eq('id', id)
