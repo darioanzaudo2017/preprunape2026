@@ -23,7 +23,9 @@ import {
   Check,
   Link2,
   ToggleLeft,
-  ToggleRight
+  ToggleRight,
+  QrCode,
+  ExternalLink
 } from 'lucide-react'
 import type { UserRol } from '../store/authStore'
 
@@ -62,7 +64,7 @@ export default function ConfigPage() {
   const queryClient = useQueryClient()
 
   // Tabs State
-  const [activeTab, setActiveTab] = useState<'usuarios' | 'localidades' | 'formularios' | 'organizaciones'>('usuarios')
+  const [activeTab, setActiveTab] = useState<'usuarios' | 'localidades' | 'formularios' | 'organizaciones' | 'links'>('usuarios')
 
   // Copy feedback state: orgId → boolean
   const [copied, setCopied] = useState<Record<number, boolean>>({})
@@ -334,27 +336,6 @@ export default function ConfigPage() {
           </p>
         </div>
 
-        {/* Links públicos */}
-        <div className="flex flex-col sm:flex-row gap-2 shrink-0">
-          <a
-            href="/org"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold hover:bg-indigo-100 transition-colors"
-          >
-            <Network className="h-3.5 w-3.5" />
-            Portal Organizaciones
-          </a>
-          <a
-            href="/consulta"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-700 text-xs font-bold hover:bg-teal-100 transition-colors"
-          >
-            <Users className="h-3.5 w-3.5" />
-            Consulta Familias
-          </a>
-        </div>
       </header>
 
       {/* Tabs Menu Navigation */}
@@ -398,6 +379,16 @@ export default function ConfigPage() {
           }`}
         >
           <Network className="h-4 w-4" /> Organizaciones
+        </button>
+        <button
+          onClick={() => setActiveTab('links')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold transition-all ${
+            activeTab === 'links'
+              ? 'bg-primary text-on-primary shadow-sm'
+              : 'text-slate-600 hover:bg-slate-50'
+          }`}
+        >
+          <QrCode className="h-4 w-4" /> Links y QR
         </button>
       </nav>
 
@@ -788,6 +779,103 @@ export default function ConfigPage() {
               </div>
             </div>
           )}
+
+          {/* TAB 5: LINKS Y QR */}
+          {activeTab === 'links' && (() => {
+            const base = window.location.origin
+            const links = [
+              {
+                titulo: 'Portal de Organizaciones',
+                descripcion: 'Para instituciones y municipios que acceden con su token de organización.',
+                url: `${base}/org`,
+                color: 'indigo',
+                icon: <Network className="h-5 w-5" />,
+              },
+              {
+                titulo: 'Consulta para Familias',
+                descripcion: 'Para padres y tutores que quieren ver los resultados y recibir sugerencias de la IA.',
+                url: `${base}/consulta`,
+                color: 'teal',
+                icon: <Users className="h-5 w-5" />,
+              },
+            ]
+
+            return (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {links.map(({ titulo, descripcion, url, color, icon }) => {
+                  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&margin=10&data=${encodeURIComponent(url)}`
+                  const isCopied = copied[-1] // placeholder, usamos el copyToken con id negativo
+                  return (
+                    <div key={url} className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5">
+                      {/* Header */}
+                      <div className={`flex items-center gap-3 p-3 rounded-xl bg-${color}-50 border border-${color}-200`}>
+                        <span className={`text-${color}-600`}>{icon}</span>
+                        <div>
+                          <h4 className={`text-sm font-bold text-${color}-800`}>{titulo}</h4>
+                          <p className="text-xs text-slate-500 leading-relaxed mt-0.5">{descripcion}</p>
+                        </div>
+                      </div>
+
+                      {/* URL + botón copiar */}
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                          <Link2 className="h-3 w-3" /> Link para compartir
+                        </label>
+                        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5">
+                          <span className="text-xs font-mono text-slate-600 truncate flex-1">{url}</span>
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(url)
+                              const key = url.length
+                              setCopied(prev => ({ ...prev, [key]: true }))
+                              setTimeout(() => setCopied(prev => ({ ...prev, [key]: false })), 2000)
+                            }}
+                            className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 text-[10px] font-bold transition-colors"
+                          >
+                            {copied[url.length]
+                              ? <><Check className="h-3 w-3 text-emerald-500" /> Copiado</>
+                              : <><Copy className="h-3 w-3" /> Copiar</>
+                            }
+                          </button>
+                          <a
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="shrink-0 flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 text-[10px] font-bold transition-colors"
+                          >
+                            <ExternalLink className="h-3 w-3" /> Abrir
+                          </a>
+                        </div>
+                      </div>
+
+                      {/* QR */}
+                      <div className="space-y-2">
+                        <label className="text-[9px] font-extrabold uppercase tracking-wider text-slate-400 flex items-center gap-1">
+                          <QrCode className="h-3 w-3" /> Código QR
+                        </label>
+                        <div className="flex flex-col items-center gap-3 p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                          <img
+                            src={qrUrl}
+                            alt={`QR ${titulo}`}
+                            className="w-[180px] h-[180px] rounded-lg"
+                          />
+                          <a
+                            href={qrUrl}
+                            download={`qr-${titulo.toLowerCase().replace(/\s+/g, '-')}.png`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 text-xs font-bold transition-colors"
+                          >
+                            <ExternalLink className="h-3.5 w-3.5" /> Descargar QR
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )
+          })()}
 
         </div>
       )}
