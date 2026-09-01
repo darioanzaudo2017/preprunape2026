@@ -333,6 +333,28 @@ export default function ConfigPage() {
             Administre usuarios del municipio, localidades asociadas y parámetros críticos del cuestionario.
           </p>
         </div>
+
+        {/* Links públicos */}
+        <div className="flex flex-col sm:flex-row gap-2 shrink-0">
+          <a
+            href="/org"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 text-xs font-bold hover:bg-indigo-100 transition-colors"
+          >
+            <Network className="h-3.5 w-3.5" />
+            Portal Organizaciones
+          </a>
+          <a
+            href="/consulta"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-teal-50 border border-teal-200 text-teal-700 text-xs font-bold hover:bg-teal-100 transition-colors"
+          >
+            <Users className="h-3.5 w-3.5" />
+            Consulta Familias
+          </a>
+        </div>
       </header>
 
       {/* Tabs Menu Navigation */}
