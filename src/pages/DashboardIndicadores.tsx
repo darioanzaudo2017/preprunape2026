@@ -202,6 +202,22 @@ export default function DashboardIndicadoresPage() {
     }
   })
 
+  // Query: niños No Aprobados con una sola evaluación (sin reevaluar) — todos los filtros
+  const { data: sinReevaluar = 0 } = useQuery<number>({
+    queryKey: ['no-aprobados-sin-reevaluar', activeLocalidad, fechaDesde, fechaHasta, pGenero, pEspacio],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any).rpc('get_ninos_no_aprobados_sin_reevaluar', {
+        p_localidad: activeLocalidad || null,
+        p_genero: pGenero || null,
+        fecha_desde: fechaDesde || null,
+        fecha_hasta: fechaHasta || null,
+        p_espacio_cuidado: pEspacio || null
+      })
+      if (error) throw error
+      return (data as number) ?? 0
+    }
+  })
+
   // Query: niños que requieren PRUNAPE — todos los filtros
   const { data: prunapeData = [] } = useQuery<{ idnino: number; nombre: string; ultima_prueba: string }[]>({
     queryKey: ['prunape-alerta', activeLocalidad, fechaDesde, fechaHasta, pGenero, pEspacio],
@@ -258,8 +274,13 @@ export default function DashboardIndicadoresPage() {
   }, [activeLocalidad, pGenero, pEspacio, fechaDesde, fechaHasta])
 
   const totalPruebas = resumen?.total_pruebas ?? 0
-  const passPercent = totalPruebas > 0 ? Math.round(((resumen?.total_aprobados ?? 0) / totalPruebas) * 100) : 0
-  const failPercent = totalPruebas > 0 ? Math.round(((resumen?.total_no_aprobados ?? 0) / totalPruebas) * 100) : 0
+  // Conteos por niño según su última evaluación
+  const ninosAprobados = resumen?.ninos_aprobados ?? 0
+  const ninosNoAprobados = resumen?.ninos_no_aprobados ?? 0
+  const ninosSinEvaluar = resumen?.ninos_sin_evaluar ?? 0
+  const ninosBase = ninosAprobados + ninosNoAprobados + ninosSinEvaluar
+  const passPercent = ninosBase > 0 ? Math.round((ninosAprobados / ninosBase) * 100) : 0
+  const failPercent = ninosBase > 0 ? Math.round((ninosNoAprobados / ninosBase) * 100) : 0
 
   // Gender chart formatting
   const genderChartData = useMemo(() => {
@@ -276,28 +297,28 @@ export default function DashboardIndicadoresPage() {
   // Results distribution chart formatting
   const resultsChartData = useMemo(() => {
     if (!resumen) return []
-    const total = (resumen.total_aprobados || 0) + (resumen.total_no_aprobados || 0) + (resumen.total_no_evaluados || 0) || totalPruebas
+    const total = ninosBase
     return [
       {
         name: 'Aprobado',
-        value: resumen.total_aprobados ?? 0,
-        percentage: total > 0 ? Math.round(((resumen.total_aprobados ?? 0) / total) * 100) : 0,
+        value: ninosAprobados,
+        percentage: total > 0 ? Math.round((ninosAprobados / total) * 100) : 0,
         color: RESULT_COLORS.Aprobado
       },
       {
         name: 'No Aprobado',
-        value: resumen.total_no_aprobados ?? 0,
-        percentage: total > 0 ? Math.round(((resumen.total_no_aprobados ?? 0) / total) * 100) : 0,
+        value: ninosNoAprobados,
+        percentage: total > 0 ? Math.round((ninosNoAprobados / total) * 100) : 0,
         color: RESULT_COLORS['No Aprobado']
       },
       {
-        name: 'No Evaluado',
-        value: resumen.total_no_evaluados ?? 0,
-        percentage: total > 0 ? Math.round(((resumen.total_no_evaluados ?? 0) / total) * 100) : 0,
+        name: 'Sin evaluar',
+        value: ninosSinEvaluar,
+        percentage: total > 0 ? Math.round((ninosSinEvaluar / total) * 100) : 0,
         color: RESULT_COLORS['No Evaluado']
       }
     ].filter(item => item.value > 0)
-  }, [resumen, totalPruebas])
+  }, [resumen, ninosAprobados, ninosNoAprobados, ninosSinEvaluar, ninosBase])
 
   // Horizontal bar chart for adult education level
   const educationChartData = useMemo(() => {
@@ -630,7 +651,7 @@ export default function DashboardIndicadoresPage() {
                   <div className="h-8 w-20 bg-slate-200 rounded animate-pulse"></div>
                 ) : (
                   <div className="text-3xl font-extrabold text-emerald-600 font-display">
-                    {resumen?.total_aprobados ?? 0}{' '}
+                    {ninosAprobados}{' '}
                     <span className="text-xs font-bold text-slate-400">({passPercent}%)</span>
                   </div>
                 )}
@@ -657,11 +678,16 @@ export default function DashboardIndicadoresPage() {
                   <div className="h-8 w-20 bg-slate-200 rounded animate-pulse"></div>
                 ) : (
                   <div className="text-3xl font-extrabold text-red-600 font-display">
-                    {resumen?.total_no_aprobados ?? 0}{' '}
+                    {ninosNoAprobados}{' '}
                     <span className="text-xs font-bold text-slate-400">({failPercent}%)</span>
                   </div>
                 )}
                 <p className="text-[9px] text-slate-400 font-semibold mt-1">No pasaron la pre-PRUNAPE</p>
+                {!isLoadingResumen && (
+                  <p className="text-[9px] text-red-500 font-bold mt-1" title="Niños cuya única evaluación fue No Aprobado">
+                    {sinReevaluar} sin reevaluar ({ninosNoAprobados > 0 ? Math.round((sinReevaluar / ninosNoAprobados) * 100) : 0}%)
+                  </p>
+                )}
                 {filtersLabel.length > 0 && (
                   <div className="mt-1.5 flex flex-wrap gap-1">
                     {filtersLabel.map((f, i) => (

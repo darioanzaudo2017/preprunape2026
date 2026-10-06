@@ -88,13 +88,16 @@ export default function DashboardPage() {
   })
 
   const stats = useMemo(() => {
-    if (!resumen) return { totalNinos: 0, totalTests: 0, approved: 0, rejected: 0, pending: 0, passRate: 0 }
+    if (!resumen) return { totalNinos: 0, totalTests: 0, approved: 0, rejected: 0, pending: 0, kidsBase: 0, passRate: 0 }
+    // Conteos por niño según su última evaluación (aprobado + no aprobado + sin evaluar = registrados)
     const totalTests = resumen.total_pruebas
-    const approved = resumen.total_aprobados
-    const rejected = resumen.total_no_aprobados
-    const pending = resumen.total_no_evaluados
-    const passRate = totalTests > 0 ? Math.round((approved / totalTests) * 100) : 0
-    return { totalNinos: resumen.total_ninos, totalTests, approved, rejected, pending, passRate }
+    const approved = resumen.ninos_aprobados
+    const rejected = resumen.ninos_no_aprobados
+    const pending = resumen.ninos_sin_evaluar
+    const kidsBase = approved + rejected + pending
+    const evaluated = approved + rejected
+    const passRate = evaluated > 0 ? Math.round((approved / evaluated) * 100) : 0
+    return { totalNinos: resumen.total_registrados ?? kidsBase, totalTests, approved, rejected, pending, kidsBase, passRate }
   }, [resumen])
 
   const localityMetrics = useMemo((): LocalityMetric[] => {
@@ -213,7 +216,7 @@ export default function DashboardPage() {
               </div>
               <div>
                 <div className="text-4xl font-extrabold leading-none font-display text-brand-navy">{stats.totalTests}</div>
-                <p className="text-[10px] text-slate-400 mt-1 font-semibold">Pruebas clínicas realizadas</p>
+                <p className="text-[10px] text-slate-400 mt-1 font-semibold">Formularios realizados</p>
               </div>
             </div>
 
@@ -301,7 +304,7 @@ export default function DashboardPage() {
                 <p className="text-[10px] text-slate-400 font-medium">Estado global de aprobados vs no aprobados</p>
               </div>
 
-              {stats.totalTests === 0 ? (
+              {stats.kidsBase === 0 ? (
                 <div className="h-48 flex flex-col items-center justify-center text-slate-400 space-y-2">
                   <Award className="h-8 w-8 opacity-45" />
                   <p className="text-xs font-semibold">Sin evaluaciones registradas</p>
@@ -312,17 +315,17 @@ export default function DashboardPage() {
                   {/* Clean Horizontal Distribution Bar */}
                   <div className="h-5 rounded-full overflow-hidden flex shadow-inner border border-slate-100">
                     <div
-                      style={{ width: `${stats.totalTests > 0 ? (stats.approved / stats.totalTests) * 100 : 0}%` }}
+                      style={{ width: `${stats.kidsBase > 0 ? (stats.approved / stats.kidsBase) * 100 : 0}%` }}
                       className="bg-emerald-500 hover:opacity-90 transition-all cursor-pointer relative group"
                       title={`Aprobados: ${stats.approved}`}
                     />
                     <div
-                      style={{ width: `${stats.totalTests > 0 ? (stats.rejected / stats.totalTests) * 100 : 0}%` }}
+                      style={{ width: `${stats.kidsBase > 0 ? (stats.rejected / stats.kidsBase) * 100 : 0}%` }}
                       className="bg-red-500 hover:opacity-90 transition-all cursor-pointer"
                       title={`No Aprobados: ${stats.rejected}`}
                     />
                     <div
-                      style={{ width: `${stats.totalTests > 0 ? (stats.pending / stats.totalTests) * 100 : 0}%` }}
+                      style={{ width: `${stats.kidsBase > 0 ? (stats.pending / stats.kidsBase) * 100 : 0}%` }}
                       className="bg-orange-400 hover:opacity-90 transition-all cursor-pointer"
                       title={`Pendientes: ${stats.pending}`}
                     />
@@ -339,7 +342,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 font-semibold">
                         <span className="text-slate-700">{stats.approved} NNyA</span>
                         <span className="bg-emerald-500/10 text-emerald-700 px-2 py-0.5 rounded-md text-[10px] font-extrabold">
-                          {stats.totalTests > 0 ? Math.round((stats.approved / stats.totalTests) * 100) : 0}%
+                          {stats.kidsBase > 0 ? Math.round((stats.approved / stats.kidsBase) * 100) : 0}%
                         </span>
                       </div>
                     </div>
@@ -352,7 +355,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 font-semibold">
                         <span className="text-slate-700">{stats.rejected} NNyA</span>
                         <span className="bg-red-500/10 text-red-700 px-2 py-0.5 rounded-md text-[10px] font-extrabold">
-                          {stats.totalTests > 0 ? Math.round((stats.rejected / stats.totalTests) * 100) : 0}%
+                          {stats.kidsBase > 0 ? Math.round((stats.rejected / stats.kidsBase) * 100) : 0}%
                         </span>
                       </div>
                     </div>
@@ -365,7 +368,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 font-semibold">
                         <span className="text-slate-700">{stats.pending} NNyA</span>
                         <span className="bg-orange-500/10 text-orange-700 px-2 py-0.5 rounded-md text-[10px] font-extrabold">
-                          {stats.totalTests > 0 ? Math.round((stats.pending / stats.totalTests) * 100) : 0}%
+                          {stats.kidsBase > 0 ? Math.round((stats.pending / stats.kidsBase) * 100) : 0}%
                         </span>
                       </div>
                     </div>

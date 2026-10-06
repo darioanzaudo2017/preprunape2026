@@ -129,7 +129,8 @@ export default function NinosPage() {
         fecha_desde: null,
         fecha_hasta: null,
         p_localidad: isAgente && localidad ? localidad : null,
-        p_genero: null
+        p_genero: null,
+        p_espacio_cuidado: null
       })
       if (error) throw error
       const d = Array.isArray(data) ? (data[0]?.get_dashboard_resumen ?? data[0]) : data
@@ -150,7 +151,8 @@ export default function NinosPage() {
         p_localidad: isAgente && localidad ? localidad : null,
         fecha_desde: null,
         fecha_hasta: null,
-        p_genero: null
+        p_genero: null,
+        p_espacio_cuidado: null
       })
       if (error) throw error
       return new Set<string>((data || []).map((r: any) => String(r.idnino)))

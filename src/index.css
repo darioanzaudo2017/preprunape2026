@@ -201,4 +201,42 @@
     background: white !important;
     border: 1px solid #e2e8f0 !important;
   }
+
+  /* Conservar los colores de fondo (card violeta, barras) al imprimir */
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Los hijos de las grillas pueden encogerse: evita cards y gráficos cortados a la derecha */
+  .kpi-grid > *,
+  .charts-grid-3 > *,
+  .charts-grid-2 > * {
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* Nunca partir una card, una fila de gráficos ni una fila de tabla entre dos páginas */
+  .kpi-grid,
+  .charts-grid-3,
+  .charts-grid-2,
+  .bg-white,
+  .bg-violet-50,
+  .bg-violet-600,
+  .recharts-wrapper,
+  tr {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Repetir el encabezado de las tablas largas en cada página */
+  thead {
+    display: table-header-group;
+  }
+
+  /* Los títulos de sección no quedan huérfanos al final de una página */
+  h2, h3 {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
 }
