@@ -49,7 +49,7 @@ async function fetchAllPages(token: string): Promise<RawRow[]> {
   return all
 }
 
-const COLORS = ['#6366f1','#10b981','#ef4444','#f59e0b','#0d9488','#8b5cf6','#ec4899','#64748b']
+const COLORS = ['#6366f1','#10b981','#ef4444','#f59e0b','#3b7aff','#8b5cf6','#ec4899','#64748b']
 
 function getRangoEtario(meses: number | null): string {
   if (meses === null) return 'Sin dato'
@@ -113,7 +113,7 @@ function TokenModal({ onSuccess }: { onSuccess: (token: string) => void }) {
         {/* Logo */}
         <div className="text-center space-y-2">
           <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#1e293b] shadow-md">
-            <HeartPulse className="h-7 w-7 text-teal-400" />
+            <HeartPulse className="h-7 w-7 text-blue-400" />
           </div>
           <div>
             <h2 className="text-base font-extrabold text-slate-800">PrepPRUNAPE</h2>
@@ -334,7 +334,7 @@ export default function DashboardExternoPage() {
     <div className="min-h-screen bg-[#f0f4f8]">
       {/* Header */}
       <header className="bg-[#1e293b] text-white px-8 py-5 flex items-center gap-4 shadow-lg">
-        <HeartPulse className="h-8 w-8 text-teal-400 shrink-0" />
+        <HeartPulse className="h-8 w-8 text-blue-400 shrink-0" />
         <div>
           <h1 className="font-bold text-lg leading-tight">Tablero de Indicadores — PrepPRUNAPE</h1>
           <p className="text-xs text-slate-400 mt-0.5">Defensoría de los Derechos de NNyA · Córdoba</p>
@@ -530,7 +530,7 @@ export default function DashboardExternoPage() {
                   <XAxis dataKey="name" tick={{ fontSize: 10, fontWeight: 700 }} />
                   <YAxis tick={{ fontSize: 9 }} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="cantidad" fill="#0d9488" radius={[4,4,0,0]} name="Evaluaciones" />
+                  <Bar dataKey="cantidad" fill="#3b7aff" radius={[4,4,0,0]} name="Evaluaciones" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

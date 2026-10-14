@@ -327,7 +327,7 @@ export default function ConsultaFamiliar() {
                 <ul key={`ul-${elements.length}`} className="space-y-2.5 my-3 pl-1">
                   {currentListItems.map((item, lIdx) => (
                     <li key={lIdx} className="flex items-start gap-2.5 text-slate-700 leading-relaxed text-sm sm:text-base">
-                      <span className="inline-flex items-center justify-center w-2 h-2 rounded-full bg-teal-600 mt-2 flex-shrink-0" />
+                      <span className="inline-flex items-center justify-center w-2 h-2 rounded-full bg-blue-600 mt-2 flex-shrink-0" />
                       <span className="flex-1">{renderInlineFormatted(item)}</span>
                     </li>
                   ))}
@@ -409,7 +409,7 @@ export default function ConsultaFamiliar() {
       <header className="bg-white border-b border-slate-200/80 sticky top-0 z-30 shadow-xs">
         <div className="max-w-4xl mx-auto px-4 py-3.5 sm:py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center shadow-sm">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
               <HeartPulse className="w-6 h-6" />
             </div>
             <div>
@@ -417,7 +417,7 @@ export default function ConsultaFamiliar() {
                 <span className="font-bold text-lg text-slate-900 leading-none tracking-tight">
                   PrepPRUNAPE
                 </span>
-                <span className="text-[11px] font-semibold uppercase tracking-wider bg-teal-50 text-teal-700 px-2 py-0.5 rounded-full border border-teal-200">
+                <span className="text-[11px] font-semibold uppercase tracking-wider bg-blue-50 text-blue-700 px-2 py-0.5 rounded-full border border-blue-200">
                   Familias
                 </span>
               </div>
@@ -449,7 +449,7 @@ export default function ConsultaFamiliar() {
             <div
               className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
                 paso >= 1
-                  ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                   : 'bg-slate-200 text-slate-500'
               }`}
             >
@@ -463,7 +463,7 @@ export default function ConsultaFamiliar() {
             <div
               className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
                 paso >= 2
-                  ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                   : 'bg-white border-2 border-slate-300 text-slate-400'
               }`}
             >
@@ -477,7 +477,7 @@ export default function ConsultaFamiliar() {
             <div
               className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300 ${
                 paso === 3
-                  ? 'bg-teal-600 text-white shadow-md shadow-teal-600/20'
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                   : 'bg-white border-2 border-slate-300 text-slate-400'
               }`}
             >
@@ -496,7 +496,7 @@ export default function ConsultaFamiliar() {
         {paso === 1 && (
           <div className="max-w-lg mx-auto transition-opacity duration-300">
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-8 text-center">
-              <div className="w-16 h-16 bg-teal-50 text-teal-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner">
+              <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto mb-5 shadow-inner">
                 <User className="w-8 h-8" />
               </div>
 
@@ -524,7 +524,7 @@ export default function ConsultaFamiliar() {
                         if (searchError) setSearchError(null);
                       }}
                       placeholder="Ej: 32456789 (sin puntos)"
-                      className="w-full px-4 py-3.5 pl-11 rounded-xl border border-slate-300 bg-slate-50/50 text-slate-900 text-base focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-teal-500 focus:border-teal-500 transition-all placeholder:text-slate-400"
+                      className="w-full px-4 py-3.5 pl-11 rounded-xl border border-slate-300 bg-slate-50/50 text-slate-900 text-base focus:bg-white focus:outline-hidden focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all placeholder:text-slate-400"
                       disabled={isSearching}
                       autoFocus
                     />
@@ -542,7 +542,7 @@ export default function ConsultaFamiliar() {
                 <button
                   type="submit"
                   disabled={isSearching || !dni.trim()}
-                  className="w-full py-3.5 px-6 rounded-xl bg-teal-600 hover:bg-teal-700 active:bg-teal-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-base shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 active:bg-blue-800 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold text-base shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   {isSearching ? (
                     <>
@@ -559,7 +559,7 @@ export default function ConsultaFamiliar() {
               </form>
 
               <div className="mt-8 pt-6 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-500">
-                <ShieldCheck className="w-4 h-4 text-teal-600" />
+                <ShieldCheck className="w-4 h-4 text-blue-600" />
                 <span>Consulta segura y confidencial • PrepPRUNAPE</span>
               </div>
             </div>
@@ -575,7 +575,7 @@ export default function ConsultaFamiliar() {
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
                 <div>
-                  <div className="flex items-center gap-2 text-teal-700 text-sm font-semibold mb-1">
+                  <div className="flex items-center gap-2 text-blue-700 text-sm font-semibold mb-1">
                     <CheckCircle2 className="w-4 h-4" />
                     <span>Adulto identificado</span>
                   </div>
@@ -642,9 +642,9 @@ export default function ConsultaFamiliar() {
               {/* Resumen del Niño Seleccionado */}
               {ninoSeleccionado && (
                 <div className="mt-6 space-y-5">
-                  <div className="p-5 rounded-2xl bg-teal-50/60 border border-teal-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div className="p-5 rounded-2xl bg-blue-50/60 border border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3.5">
-                      <div className="w-12 h-12 rounded-2xl bg-teal-600 text-white flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0">
+                      <div className="w-12 h-12 rounded-2xl bg-blue-600 text-white flex items-center justify-center font-bold text-lg shadow-sm flex-shrink-0">
                         {ninoSeleccionado.nombre.charAt(0).toUpperCase()}
                       </div>
                       <div>
@@ -653,18 +653,18 @@ export default function ConsultaFamiliar() {
                         </h2>
                         <div className="flex flex-wrap items-center gap-2 text-xs text-slate-600 mt-0.5">
                           {ninoSeleccionado.edad_meses !== undefined && (
-                            <span className="inline-flex items-center gap-1 font-medium bg-white px-2 py-0.5 rounded-md border border-teal-200/60 text-teal-800">
-                              <Calendar className="w-3 h-3 text-teal-600" />
+                            <span className="inline-flex items-center gap-1 font-medium bg-white px-2 py-0.5 rounded-md border border-blue-200/60 text-blue-800">
+                              <Calendar className="w-3 h-3 text-blue-600" />
                               {formatEdadMeses(ninoSeleccionado.edad_meses)}
                             </span>
                           )}
-                          <span className="inline-flex items-center gap-1 font-medium bg-white px-2 py-0.5 rounded-md border border-teal-200/60 text-teal-800">
-                            <Award className="w-3 h-3 text-teal-600" />
+                          <span className="inline-flex items-center gap-1 font-medium bg-white px-2 py-0.5 rounded-md border border-blue-200/60 text-blue-800">
+                            <Award className="w-3 h-3 text-blue-600" />
                             {ninoSeleccionado.total_pruebas}{' '}
                             {ninoSeleccionado.total_pruebas === 1 ? 'evaluación realizada' : 'evaluaciones realizadas'}
                           </span>
                           {ninoSeleccionado.ultima_fecha && (
-                            <span className="inline-flex items-center gap-1 font-medium bg-white px-2 py-0.5 rounded-md border border-teal-200/60 text-teal-800">
+                            <span className="inline-flex items-center gap-1 font-medium bg-white px-2 py-0.5 rounded-md border border-blue-200/60 text-blue-800">
                               Fecha: {ninoSeleccionado.ultima_fecha}
                             </span>
                           )}
@@ -686,7 +686,7 @@ export default function ConsultaFamiliar() {
                           </span>
                         )
                       )}
-                      <span className="text-xs text-teal-900 bg-teal-100/70 py-1.5 px-3 rounded-xl font-medium">
+                      <span className="text-xs text-blue-900 bg-blue-100/70 py-1.5 px-3 rounded-xl font-medium">
                         PrepPRUNAPE
                       </span>
                     </div>
@@ -889,8 +889,8 @@ export default function ConsultaFamiliar() {
             <div className="bg-white rounded-3xl shadow-sm border border-slate-200/80 p-6 sm:p-8">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-100">
                 <div>
-                  <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2.5 py-1 rounded-full border border-teal-200 mb-2">
-                    <Sparkles className="w-3.5 h-3.5 text-teal-600" />
+                  <div className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200 mb-2">
+                    <Sparkles className="w-3.5 h-3.5 text-blue-600" />
                     Orientación personalizada
                   </div>
                   <h1 className="text-2xl sm:text-3xl font-bold text-slate-900">
@@ -987,7 +987,7 @@ export default function ConsultaFamiliar() {
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="w-full sm:w-auto py-3.5 px-6 rounded-xl bg-teal-600 hover:bg-teal-700 text-white font-semibold text-sm shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
+                  className="w-full sm:w-auto py-3.5 px-6 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 cursor-pointer"
                 >
                   <Printer className="w-4 h-4" />
                   <span>Imprimir / Guardar PDF</span>

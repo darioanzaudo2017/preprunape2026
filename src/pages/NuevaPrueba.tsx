@@ -745,7 +745,7 @@ export default function NuevaPruebaPage() {
               <div className="space-y-1.5 md:col-span-2">
                 <label className="font-semibold text-xs text-on-surface-variant flex items-center gap-1.5" htmlFor="observacion">
                   <BookOpen className="h-4 w-4 text-primary" />
-                  Observaciones Generales / Clínicas
+                  Observaciones Generales
                 </label>
                 <textarea
                   className="w-full px-4 py-3 border border-outline-variant rounded-xl focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 bg-[#f7f9fb] transition-all text-sm min-h-[100px]"

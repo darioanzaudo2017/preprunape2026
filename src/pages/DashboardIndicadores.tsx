@@ -81,7 +81,7 @@ const RESULT_COLORS = {
 }
 
 const BAR_COLOR_PRIMARY = '#6366f1' // Indigo
-const BAR_COLOR_SECONDARY = '#0d9488' // Teal
+const BAR_COLOR_SECONDARY = '#3b7aff' // Teal
 
 export default function DashboardIndicadoresPage() {
   const { isAgente, localidad: userLocalidad } = useUserRole()
@@ -393,10 +393,10 @@ export default function DashboardIndicadoresPage() {
   }, [resumen, isLoadingResumen])
 
   return (
-    <div className="p-8 max-w-[1400px] mx-auto w-full space-y-8 bg-[#f7f9fb] min-h-screen">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto w-full space-y-8 bg-[#f7f9fb] min-h-screen">
       
       {/* Sticky Filters bar */}
-      <nav className="no-print sticky top-0 z-30 bg-[#f7f9fb]/90 backdrop-blur-md pb-4 pt-1 flex flex-col md:flex-row gap-4 items-end border-b border-slate-200/40">
+      <nav className="no-print md:sticky md:top-0 md:z-30 bg-[#f7f9fb]/90 backdrop-blur-md pb-4 pt-1 flex flex-col md:flex-row gap-4 items-end border-b border-slate-200/40">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 w-full text-xs">
           {/* Fecha Desde */}
           <div className="space-y-1">

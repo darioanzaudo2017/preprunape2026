@@ -947,7 +947,7 @@ export default function NinoDetailPage() {
   const unapprovedEvaluations = activePruebas.filter((p) => p.aprobado === 'No Aprobado').length
 
   return (
-    <div className="p-8 max-w-[1200px] mx-auto w-full space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1200px] mx-auto w-full space-y-6">
       {/* Breadcrumbs */}
       <nav className="flex items-center gap-1.5 text-on-surface-variant mb-2">
         <Link to="/" className="text-xs hover:text-primary transition-colors">
@@ -1133,7 +1133,7 @@ export default function NinoDetailPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <div className="inline-flex bg-teal-50 px-2.5 py-1 rounded text-primary font-bold text-xs">
+                      <div className="inline-flex bg-blue-50 px-2.5 py-1 rounded text-primary font-bold text-xs">
                         {prueba.formulario}
                       </div>
                     </td>

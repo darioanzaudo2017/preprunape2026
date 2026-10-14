@@ -145,7 +145,7 @@ export default function DashboardPage() {
   const isLoading = isLoadingResumen || isLoadingLocality || isLoadingRangos
 
   return (
-    <div className="p-8 max-w-[1400px] mx-auto w-full space-y-8 bg-[#f7f9fb] min-h-screen text-on-surface">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto w-full space-y-8 bg-[#f7f9fb] min-h-screen text-on-surface">
       
       {/* Top Welcome Header */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 p-1">
@@ -412,7 +412,7 @@ export default function DashboardPage() {
                   <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden">
                     <div
                       style={{ width: `${stats.totalNinos > 0 ? (ageGroupMetrics.form2 / stats.totalNinos) * 100 : 0}%` }}
-                      className="h-full bg-teal-500 rounded-full transition-all duration-500"
+                      className="h-full bg-blue-500 rounded-full transition-all duration-500"
                     />
                   </div>
                 </div>

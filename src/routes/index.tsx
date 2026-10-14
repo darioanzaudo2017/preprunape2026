@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { createBrowserRouter, Navigate, Outlet, Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../store/authStore'
 import { useUserRole } from '../hooks/useUserRole'
@@ -18,7 +19,7 @@ import PendienteAprobacion from '../pages/PendienteAprobacion'
 import EncuestaPublica from '../pages/EncuestaPublica'
 import DashboardExternoPage from '../pages/DashboardExterno'
 import ConsultaFamiliar from '../pages/ConsultaFamiliar'
-import { LayoutDashboard, Users, MapPin, LogOut, HeartPulse, ShieldCheck, Settings, Network, BarChart2 } from 'lucide-react'
+import { LayoutDashboard, Users, MapPin, LogOut, HeartPulse, ShieldCheck, Settings, Network, BarChart2, Menu, X } from 'lucide-react'
 
 // ProtectedRoute Component
 function ProtectedRoute() {
@@ -66,6 +67,12 @@ function Layout() {
   const { rol, localidad, displayName, isAdmin } = useUserRole()
   const location = useLocation()
   const navigate = useNavigate()
+  const [menuOpen, setMenuOpen] = useState(false)
+
+  // Cerrar el menú lateral (celular) al cambiar de pantalla
+  useEffect(() => {
+    setMenuOpen(false)
+  }, [location.pathname])
 
   const handleSignOut = async () => {
     try {
@@ -86,16 +93,36 @@ function Layout() {
 
   return (
     <div className="flex h-screen w-screen bg-brand-slate overflow-hidden">
-      {/* Sidebar */}
-      <aside className="w-64 bg-brand-navy text-white flex flex-col justify-between shadow-lg">
+      {/* Fondo oscuro del menú en celular */}
+      {menuOpen && (
+        <div
+          className="no-print fixed inset-0 z-30 bg-black/50 lg:hidden"
+          onClick={() => setMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar: fija en escritorio, cajón deslizable en celular */}
+      <aside
+        className={`fixed inset-y-0 left-0 z-40 w-64 bg-brand-navy text-white flex flex-col justify-between shadow-lg overflow-y-auto transition-transform duration-200 lg:static lg:translate-x-0 lg:shrink-0 ${
+          menuOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
         <div>
           {/* Header */}
-          <div className="p-6 border-b border-brand-navy-light flex items-center gap-3">
-            <HeartPulse className="h-8 w-8 text-brand-teal" />
-            <div>
-              <h1 className="font-display font-semibold text-lg leading-tight">Prep</h1>
-              <p className="text-xs text-brand-teal font-medium tracking-wide">PRUNAPE</p>
-            </div>
+          <div className="p-4 border-b border-brand-navy-light flex items-center gap-2">
+            <img
+              src="/logo-primeros-pasos.png"
+              alt="Primeros Pasos - Sistema de Datos para el Monitoreo de los Primeros Años"
+              className="flex-1 min-w-0 h-auto"
+            />
+            <button
+              onClick={() => setMenuOpen(false)}
+              className="lg:hidden p-1 rounded-md text-slate-300 hover:bg-brand-navy-light shrink-0"
+              aria-label="Cerrar menú"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
 
           {/* Navigation Links */}
@@ -158,20 +185,29 @@ function Layout() {
       </aside>
 
       {/* Main Content Area */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 min-w-0 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-brand-slate-border flex items-center justify-between px-8 shadow-sm">
-          <span className="font-display font-medium text-brand-navy text-sm">
-            {new Date().toLocaleDateString('es-AR', {
-              weekday: 'long',
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </span>
-          <div className="flex items-center gap-2">
+        <header className="h-16 bg-white border-b border-brand-slate-border flex items-center justify-between gap-3 px-4 sm:px-8 shadow-sm">
+          <div className="flex items-center gap-3 min-w-0">
+            <button
+              onClick={() => setMenuOpen(true)}
+              className="lg:hidden p-2 -ml-2 rounded-lg text-brand-navy hover:bg-slate-100"
+              aria-label="Abrir menú"
+            >
+              <Menu className="h-6 w-6" />
+            </button>
+            <span className="font-display font-medium text-brand-navy text-sm truncate">
+              {new Date().toLocaleDateString('es-AR', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <span className="text-xs text-brand-slate-text font-medium">Supabase Conectado</span>
+            <span className="hidden sm:inline text-xs text-brand-slate-text font-medium">Supabase Conectado</span>
           </div>
         </header>
 

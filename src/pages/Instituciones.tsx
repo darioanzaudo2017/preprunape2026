@@ -192,7 +192,7 @@ export default function InstitucionesPage() {
   const getBadgeTypeColor = (type?: string | null) => {
     if (!type) return 'bg-slate-100 text-slate-700'
     const t = type.toLowerCase()
-    if (t.includes('municipal')) return 'bg-teal-500/10 text-teal-700 border border-teal-500/20'
+    if (t.includes('municipal')) return 'bg-blue-500/10 text-blue-700 border border-blue-500/20'
     if (t.includes('provincial')) return 'bg-sky-500/10 text-sky-700 border border-sky-500/20'
     if (t.includes('nacional')) return 'bg-indigo-500/10 text-indigo-700 border border-indigo-500/20'
     if (t.includes('ong') || t.includes('civil') || t.includes('asociación')) return 'bg-amber-500/10 text-amber-700 border border-amber-500/20'
@@ -200,7 +200,7 @@ export default function InstitucionesPage() {
   }
 
   return (
-    <div className="p-8 max-w-[1400px] mx-auto w-full space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto w-full space-y-6">
       {/* Title Header */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>

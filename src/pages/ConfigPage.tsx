@@ -324,7 +324,7 @@ export default function ConfigPage() {
   })
 
   return (
-    <div className="p-8 md:p-10 max-w-[1200px] mx-auto w-full space-y-8 bg-[#f7f9fb] min-h-screen">
+    <div className="p-4 sm:p-6 md:p-10 max-w-[1200px] mx-auto w-full space-y-8 bg-[#f7f9fb] min-h-screen">
       {/* Page Title */}
       <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>

@@ -215,7 +215,7 @@ export default function NinosPage() {
   }
 
   return (
-    <div className="p-8 max-w-[1400px] mx-auto w-full space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto w-full space-y-6">
       {/* Top Header */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-4 p-1">
         <div>
@@ -226,10 +226,10 @@ export default function NinosPage() {
             Listado de Niños (NNyA)
           </h1>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-3 w-full md:w-auto">
           <button
             onClick={() => navigate('/ninos/nuevo')}
-            className="bg-primary hover:brightness-110 text-on-primary px-6 py-2.5 rounded-full text-xs font-bold flex items-center gap-2 transition-all shadow-md shadow-primary/10"
+            className="w-full md:w-auto justify-center bg-primary hover:brightness-110 text-on-primary px-6 py-2.5 rounded-full text-xs font-bold flex items-center gap-2 transition-all shadow-md shadow-primary/10"
           >
             <Plus className="h-4 w-4" />
             Agregar NNyA
@@ -238,9 +238,9 @@ export default function NinosPage() {
       </header>
 
       {/* Bento Stats Grid */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <section className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-6">
         {/* Stat 1 */}
-        <div className="bg-[#1e293b] text-white p-6 rounded-2xl shadow-sm border border-outline-variant/10 flex flex-col justify-between min-h-[120px] transition-all duration-300 hover:translate-y-[-4px] hover:shadow-md">
+        <div className="bg-[#1e293b] text-white p-4 sm:p-6 rounded-2xl shadow-sm border border-outline-variant/10 flex flex-col justify-between min-h-[120px] transition-all duration-300 hover:translate-y-[-4px] hover:shadow-md">
           <div className="flex justify-between items-start">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">NNyA Total</span>
             <div className="bg-slate-800 p-1.5 rounded-lg">
@@ -251,9 +251,9 @@ export default function NinosPage() {
         </div>
 
         {/* Stat 2 */}
-        <div className="bg-primary-container text-on-primary-container p-6 rounded-2xl shadow-sm border border-outline-variant/10 flex flex-col justify-between min-h-[120px] transition-all duration-300 hover:translate-y-[-4px] hover:shadow-md">
+        <div className="bg-primary-container text-on-primary-container p-4 sm:p-6 rounded-2xl shadow-sm border border-outline-variant/10 flex flex-col justify-between min-h-[120px] transition-all duration-300 hover:translate-y-[-4px] hover:shadow-md">
           <div className="flex justify-between items-start">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-teal-100">NNyA Aprobados</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-100">NNyA Aprobados</span>
             <div className="bg-primary-container/80 p-1.5 rounded-lg">
               <CheckCircle2 className="h-4 w-4 text-emerald-300" />
             </div>
@@ -262,7 +262,7 @@ export default function NinosPage() {
         </div>
 
         {/* Stat 3 */}
-        <div className="bg-error-container text-on-error-container p-6 rounded-2xl shadow-sm border border-outline-variant/10 flex flex-col justify-between min-h-[120px] transition-all duration-300 hover:translate-y-[-4px] hover:shadow-md">
+        <div className="bg-error-container text-on-error-container p-4 sm:p-6 rounded-2xl shadow-sm border border-outline-variant/10 flex flex-col justify-between min-h-[120px] transition-all duration-300 hover:translate-y-[-4px] hover:shadow-md">
           <div className="flex justify-between items-start">
             <span className="text-[10px] font-bold uppercase tracking-wider text-red-700">NNyA No aprobados</span>
             <div className="bg-red-100 p-1.5 rounded-lg">
@@ -273,7 +273,7 @@ export default function NinosPage() {
         </div>
 
         {/* Stat 4 */}
-        <div className="bg-orange-500 text-white p-6 rounded-2xl shadow-sm border border-outline-variant/10 flex flex-col justify-between min-h-[120px] transition-all duration-300 hover:translate-y-[-4px] hover:shadow-md">
+        <div className="bg-orange-500 text-white p-4 sm:p-6 rounded-2xl shadow-sm border border-outline-variant/10 flex flex-col justify-between min-h-[120px] transition-all duration-300 hover:translate-y-[-4px] hover:shadow-md">
           <div className="flex justify-between items-start">
             <span className="text-[10px] font-bold uppercase tracking-wider text-orange-100">Sin Evaluar</span>
             <div className="bg-orange-600 p-1.5 rounded-lg">
@@ -286,7 +286,7 @@ export default function NinosPage() {
         {/* Stat 5 — Requieren PRUNAPE (clickable filter) */}
         <button
           onClick={() => { setSoloAlerta(v => !v); setCurrentPage(1) }}
-          className={`p-6 rounded-2xl shadow-sm border flex flex-col justify-between min-h-[120px] transition-all duration-300 hover:translate-y-[-4px] hover:shadow-md text-left w-full ${soloAlerta ? 'bg-violet-600 border-violet-500 text-white' : 'bg-violet-50 border-violet-200 text-violet-900'}`}
+          className={`col-span-2 lg:col-span-1 p-4 sm:p-6 rounded-2xl shadow-sm border flex flex-col justify-between min-h-[120px] transition-all duration-300 hover:translate-y-[-4px] hover:shadow-md text-left w-full ${soloAlerta ? 'bg-violet-600 border-violet-500 text-white' : 'bg-violet-50 border-violet-200 text-violet-900'}`}
         >
           <div className="flex justify-between items-start">
             <span className={`text-[10px] font-bold uppercase tracking-wider ${soloAlerta ? 'text-violet-200' : 'text-violet-500'}`}>Requieren PRUNAPE</span>
@@ -304,7 +304,7 @@ export default function NinosPage() {
       </section>
 
       {/* Search & Filters */}
-      <section className="flex gap-3 items-center">
+      <section className="flex flex-col sm:flex-row gap-3 sm:items-center">
         <div className="relative flex-1">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-outline h-5 w-5" />
           <input
@@ -331,7 +331,66 @@ export default function NinosPage() {
 
       {/* Patient Table Card */}
       <section className="bg-white rounded-2xl shadow-sm overflow-hidden border border-outline-variant/30">
-        <div className="overflow-x-auto">
+        {/* Vista celular: una card por niño/a */}
+        <div className="md:hidden divide-y divide-slate-100">
+          {isLoading || rol === null ? (
+            <p className="text-center py-10 text-sm text-secondary">Cargando registros...</p>
+          ) : currentItems.length === 0 ? (
+            <p className="text-center py-10 text-sm text-secondary">No se encontraron niños/as que coincidan con la búsqueda.</p>
+          ) : (
+            currentItems.map((nino) => (
+              <button
+                key={nino.id}
+                onClick={() => navigate(`/ninos/${nino.id}`)}
+                className={`w-full text-left p-4 space-y-2 active:bg-slate-50 ${nino.requierePrunape ? 'bg-violet-50/60' : ''}`}
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className="text-sm font-semibold text-on-surface">{nino.apellido}, {nino.nombre}</span>
+                  {nino.formularioUltima && (
+                    <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-200/50 shrink-0">
+                      {nino.formularioUltima}
+                    </span>
+                  )}
+                </div>
+                {(nino.requierePrunape || nino.seguimiento) && (
+                  <div className="flex flex-wrap gap-2">
+                    {nino.requierePrunape && (
+                      <span className="inline-flex items-center gap-1 bg-violet-100 text-violet-700 border border-violet-200 px-2 py-0.5 rounded-full text-[10px] font-extrabold">
+                        <Stethoscope className="h-3 w-3" />
+                        Requiere PRUNAPE
+                      </span>
+                    )}
+                    {nino.seguimiento && (
+                      <span className={`inline-flex items-center gap-1 border px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                        nino.seguimiento.resultado === 'Pasó'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200/50'
+                          : 'bg-red-50 text-red-700 border-red-200/50'
+                      }`}>
+                        PRUNAPE: {nino.seguimiento.resultado}
+                      </span>
+                    )}
+                  </div>
+                )}
+                <dl className="grid grid-cols-3 gap-2 text-xs">
+                  <div>
+                    <dt className="text-[10px] font-bold uppercase text-slate-400">DNI</dt>
+                    <dd className="font-mono text-on-surface-variant">{nino.dni || '—'}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] font-bold uppercase text-slate-400">Nacimiento</dt>
+                    <dd className="text-on-surface-variant">{formatDate(nino.fechaNacimiento, '—')}</dd>
+                  </div>
+                  <div>
+                    <dt className="text-[10px] font-bold uppercase text-slate-400">Últ. eval.</dt>
+                    <dd className="text-on-surface-variant">{formatDate(nino.ultimaEvaluacion, '—')}</dd>
+                  </div>
+                </dl>
+              </button>
+            ))
+          )}
+        </div>
+
+        <div className="hidden md:block overflow-x-auto">
           <table className="w-full border-collapse text-left">
             <thead className="bg-[#111c2d] text-white">
               <tr>
@@ -414,7 +473,7 @@ export default function NinosPage() {
         </div>
 
         {/* Pagination Container */}
-        <div className="px-6 py-4 bg-slate-50 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-4 bg-slate-50 flex flex-wrap gap-3 items-center justify-between">
           <span className="text-xs font-medium text-on-surface-variant">
             Mostrando {currentItems.length} de {filteredList.length} niños/as
           </span>

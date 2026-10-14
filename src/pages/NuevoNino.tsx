@@ -255,7 +255,7 @@ export default function NuevoNinoPage() {
   }
 
   return (
-    <div className="p-8 max-w-[1200px] mx-auto w-full space-y-6">
+    <div className="p-4 sm:p-6 lg:p-8 max-w-[1200px] mx-auto w-full space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-3xl font-extrabold text-on-surface font-display leading-tight">

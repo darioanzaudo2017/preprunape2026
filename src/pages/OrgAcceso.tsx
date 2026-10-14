@@ -46,7 +46,7 @@ export default function OrgAccesoPage() {
         {/* Logo / Header */}
         <div className="text-center space-y-3">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#1e293b] shadow-lg">
-            <HeartPulse className="h-8 w-8 text-teal-400" />
+            <HeartPulse className="h-8 w-8 text-blue-400" />
           </div>
           <div>
             <h1 className="text-xl font-bold text-slate-800">PrepPRUNAPE</h1>

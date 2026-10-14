@@ -317,13 +317,13 @@ export default function EncuestaPublica() {
       {/* Brand Header */}
       <header className="bg-white border-b border-slate-150 h-16 flex items-center px-4 sm:px-8 shadow-sm justify-between sticky top-0 z-30">
         <div className="flex items-center gap-2.5">
-          <HeartPulse className="h-6.5 w-6.5 text-[#00685f]" />
+          <HeartPulse className="h-6.5 w-6.5 text-[#2f6df0]" />
           <div>
             <h1 className="font-display font-bold text-base leading-tight text-slate-800">Prep</h1>
-            <p className="text-[10px] text-[#00685f] font-black tracking-wider uppercase">PRUNAPE</p>
+            <p className="text-[10px] text-[#2f6df0] font-black tracking-wider uppercase">PRUNAPE</p>
           </div>
         </div>
-        <div className="px-3 py-1 bg-[#00685f]/10 rounded-full text-xs font-bold text-[#00685f]">
+        <div className="px-3 py-1 bg-[#2f6df0]/10 rounded-full text-xs font-bold text-[#2f6df0]">
           Encuesta Pública
         </div>
       </header>
@@ -332,8 +332,8 @@ export default function EncuestaPublica() {
       <main className="flex-1 w-full max-w-2xl mx-auto px-4 py-6 sm:py-8 flex flex-col">
         {/* Child Information Header Banner */}
         {nino && (
-          <div className="bg-[#00685f]/5 border border-[#00685f]/10 rounded-2xl p-4 sm:p-5 mb-5 shadow-xs">
-            <span className="text-[10px] font-extrabold text-[#00685f]/80 uppercase tracking-widest block">
+          <div className="bg-[#2f6df0]/5 border border-[#2f6df0]/10 rounded-2xl p-4 sm:p-5 mb-5 shadow-xs">
+            <span className="text-[10px] font-extrabold text-[#2f6df0]/80 uppercase tracking-widest block">
               Completar datos de hogar para:
             </span>
             <h2 className="text-lg font-black text-slate-800 mt-1">{nino.nombre}</h2>
@@ -357,7 +357,7 @@ export default function EncuestaPublica() {
           {/* Stepper info header */}
           <div className="p-4 sm:p-6 border-b border-slate-50 bg-slate-50/50 flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-xl bg-[#00685f]/10 text-[#00685f] flex items-center justify-center shrink-0">
+              <div className="h-10 w-10 rounded-xl bg-[#2f6df0]/10 text-[#2f6df0] flex items-center justify-center shrink-0">
                 <ActiveIcon className="h-5 w-5" />
               </div>
               <div>
@@ -410,7 +410,7 @@ export default function EncuestaPublica() {
                             key={opt.value}
                             className={`flex items-center gap-2.5 p-3.5 border rounded-xl cursor-pointer transition-all ${
                               field.value === opt.value
-                                ? 'border-[#00685f] bg-[#00685f]/5 ring-1 ring-[#00685f]'
+                                ? 'border-[#2f6df0] bg-[#2f6df0]/5 ring-1 ring-[#2f6df0]'
                                 : 'border-slate-200 hover:bg-slate-50 bg-[#f7f9fb]'
                             }`}
                           >
@@ -495,7 +495,7 @@ export default function EncuestaPublica() {
                             key={opt.value}
                             className={`flex items-center gap-2.5 p-3.5 border rounded-xl cursor-pointer transition-all ${
                               field.value === opt.value
-                                ? 'border-[#00685f] bg-[#00685f]/5 ring-1 ring-[#00685f]'
+                                ? 'border-[#2f6df0] bg-[#2f6df0]/5 ring-1 ring-[#2f6df0]'
                                 : 'border-slate-200 hover:bg-slate-50 bg-[#f7f9fb]'
                             }`}
                           >
@@ -594,7 +594,7 @@ export default function EncuestaPublica() {
                             }}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:bg-[#00685f] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:bg-[#2f6df0] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                         </label>
                       )}
                     />
@@ -623,7 +623,7 @@ export default function EncuestaPublica() {
                                   key={t.value}
                                   className={`flex items-center gap-2.5 p-3 border rounded-xl cursor-pointer select-none transition-all ${
                                     currentValues.includes(t.value)
-                                      ? 'border-[#00685f] bg-[#00685f]/5 ring-1 ring-[#00685f]'
+                                      ? 'border-[#2f6df0] bg-[#2f6df0]/5 ring-1 ring-[#2f6df0]'
                                       : 'border-slate-200 hover:bg-slate-50 bg-white'
                                   }`}
                                 >
@@ -675,7 +675,7 @@ export default function EncuestaPublica() {
                             key={opt.value}
                             className={`flex items-center gap-2.5 p-3.5 border rounded-xl cursor-pointer transition-all ${
                               field.value === opt.value
-                                ? 'border-[#00685f] bg-[#00685f]/5 ring-1 ring-[#00685f]'
+                                ? 'border-[#2f6df0] bg-[#2f6df0]/5 ring-1 ring-[#2f6df0]'
                                 : 'border-slate-200 hover:bg-slate-50 bg-[#f7f9fb]'
                             }`}
                           >
@@ -818,7 +818,7 @@ export default function EncuestaPublica() {
                             key={opt.value}
                             className={`flex items-center gap-2.5 p-3.5 border rounded-xl cursor-pointer transition-all ${
                               field.value === opt.value
-                                ? 'border-[#00685f] bg-[#00685f]/5 ring-1 ring-[#00685f]'
+                                ? 'border-[#2f6df0] bg-[#2f6df0]/5 ring-1 ring-[#2f6df0]'
                                 : 'border-slate-200 hover:bg-slate-50 bg-[#f7f9fb]'
                             }`}
                           >
@@ -857,7 +857,7 @@ export default function EncuestaPublica() {
                             key={opt.value}
                             className={`flex items-center gap-2.5 p-3.5 border rounded-xl cursor-pointer transition-all ${
                               field.value === opt.value
-                                ? 'border-[#00685f] bg-[#00685f]/5 ring-1 ring-[#00685f]'
+                                ? 'border-[#2f6df0] bg-[#2f6df0]/5 ring-1 ring-[#2f6df0]'
                                 : 'border-slate-200 hover:bg-slate-50 bg-[#f7f9fb]'
                             }`}
                           >
@@ -896,7 +896,7 @@ export default function EncuestaPublica() {
                             key={opt.value}
                             className={`flex items-center gap-2.5 p-3.5 border rounded-xl cursor-pointer transition-all ${
                               field.value === opt.value
-                                ? 'border-[#00685f] bg-[#00685f]/5 ring-1 ring-[#00685f]'
+                                ? 'border-[#2f6df0] bg-[#2f6df0]/5 ring-1 ring-[#2f6df0]'
                                 : 'border-slate-200 hover:bg-slate-50 bg-[#f7f9fb]'
                             }`}
                           >
@@ -936,7 +936,7 @@ export default function EncuestaPublica() {
                             key={opt.value}
                             className={`flex items-center gap-2 p-3.5 border rounded-xl cursor-pointer transition-all ${
                               field.value === opt.value
-                                ? 'border-[#00685f] bg-[#00685f]/5 ring-1 ring-[#00685f]'
+                                ? 'border-[#2f6df0] bg-[#2f6df0]/5 ring-1 ring-[#2f6df0]'
                                 : 'border-slate-200 hover:bg-slate-50 bg-[#f7f9fb]'
                             }`}
                           >
@@ -973,7 +973,7 @@ export default function EncuestaPublica() {
                           onChange={(e) => field.onChange(e.target.checked)}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:bg-[#00685f] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:bg-[#2f6df0] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                       </label>
                     )}
                   />
@@ -1005,7 +1005,7 @@ export default function EncuestaPublica() {
                             }}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:bg-[#00685f] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:bg-[#2f6df0] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                         </label>
                       )}
                     />
@@ -1032,7 +1032,7 @@ export default function EncuestaPublica() {
                                   key={t.value}
                                   className={`flex items-center gap-2.5 p-3 border rounded-xl cursor-pointer select-none transition-all ${
                                     currentValues.includes(t.value)
-                                      ? 'border-[#00685f] bg-[#00685f]/5 ring-1 ring-[#00685f]'
+                                      ? 'border-[#2f6df0] bg-[#2f6df0]/5 ring-1 ring-[#2f6df0]'
                                       : 'border-slate-200 hover:bg-slate-50 bg-white'
                                   }`}
                                 >
@@ -1081,7 +1081,7 @@ export default function EncuestaPublica() {
                             }}
                             className="sr-only peer"
                           />
-                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:bg-[#00685f] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
+                          <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-primary/20 rounded-full peer peer-checked:bg-[#2f6df0] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all"></div>
                         </label>
                       )}
                     />
@@ -1111,7 +1111,7 @@ export default function EncuestaPublica() {
                                   key={t.value}
                                   className={`flex items-center gap-2.5 p-3 border rounded-xl cursor-pointer select-none transition-all ${
                                     currentValues.includes(t.value)
-                                      ? 'border-[#00685f] bg-[#00685f]/5 ring-1 ring-[#00685f]'
+                                      ? 'border-[#2f6df0] bg-[#2f6df0]/5 ring-1 ring-[#2f6df0]'
                                       : 'border-slate-200 hover:bg-slate-50 bg-white'
                                   }`}
                                 >
@@ -1173,7 +1173,7 @@ export default function EncuestaPublica() {
                 <Button
                   type="button"
                   onClick={handleNext}
-                  className="flex items-center gap-1.5 h-11 px-5 font-bold transition-all bg-[#00685f] hover:bg-[#00685f]/95 text-white rounded-xl"
+                  className="flex items-center gap-1.5 h-11 px-5 font-bold transition-all bg-[#2f6df0] hover:bg-[#2f6df0]/95 text-white rounded-xl"
                 >
                   Siguiente
                   <ArrowRight className="h-4 w-4" />
