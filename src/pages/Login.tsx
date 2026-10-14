@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { useAuthStore } from '../store/authStore'
 import { toast } from 'sonner'
+import InstallAppButton from '../components/shared/InstallAppButton'
 import { HeartPulse, HelpCircle, Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react'
 
 export default function LoginPage() {
@@ -51,6 +52,7 @@ export default function LoginPage() {
             <span className="font-display text-xl font-bold text-primary">Prep-PRUNAPE</span>
           </div>
           <div className="flex items-center gap-4">
+            <InstallAppButton variant="light" />
             <button className="text-on-surface-variant hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95 duration-150">
               <HelpCircle className="h-5 w-5" />
             </button>

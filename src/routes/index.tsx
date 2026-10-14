@@ -19,6 +19,7 @@ import PendienteAprobacion from '../pages/PendienteAprobacion'
 import EncuestaPublica from '../pages/EncuestaPublica'
 import DashboardExternoPage from '../pages/DashboardExterno'
 import ConsultaFamiliar from '../pages/ConsultaFamiliar'
+import InstallAppButton from '../components/shared/InstallAppButton'
 import { LayoutDashboard, Users, MapPin, LogOut, HeartPulse, ShieldCheck, Settings, Network, BarChart2, Menu, X } from 'lucide-react'
 
 // ProtectedRoute Component
@@ -154,6 +155,8 @@ function Layout() {
 
         {/* Footer User Profile & SignOut */}
         <div className="p-4 border-t border-brand-navy-light space-y-3">
+          <InstallAppButton variant="dark" />
+
           <div className="flex items-start gap-3 px-2">
             <div className="h-10 w-10 rounded-full bg-brand-teal flex items-center justify-center font-display font-semibold text-white shrink-0">
               {(displayName || user?.email || 'U')[0].toUpperCase()}
