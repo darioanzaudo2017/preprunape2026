@@ -27,6 +27,9 @@ interface Ninya {
   fechaNacimiento: string | null
   ultimaEvaluacion: string | null
   formularioUltima: string | null
+  anulado: boolean
+  anuladoMotivo: string | null
+  anuladoAt: string | null
   requierePrunape?: boolean
   seguimiento?: { resultado: string; fecha: string } | null
 }
@@ -37,6 +40,7 @@ export default function NinosPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
   const [soloAlerta, setSoloAlerta] = useState(false)
+  const [vista, setVista] = useState<'activos' | 'anulados'>('activos')
 
   console.log('NinosPage: Render called with state:', { rol, localidad, isAgente, displayName })
 
@@ -46,9 +50,10 @@ export default function NinosPage() {
     enabled: rol !== null,
     queryFn: async () => {
       console.log('NinosPage: children queryFn starting...', { rol, localidad, isAgente })
-      let query = supabase
+      // (supabase as any): el parser de tipos no soporta la ñ y las columnas de anulación no están tipadas
+      let query = (supabase as any)
         .from('niños')
-        .select('idninos, dni, nombre, Direccion, Telefonocontacto, fecha_nacimiento, ultEvaluacion')
+        .select('idninos, dni, nombre, Direccion, Telefonocontacto, fecha_nacimiento, ultEvaluacion, anulado, anulado_motivo, anulado_at')
 
       if (isAgente && localidad) {
         console.log('NinosPage: Filtering children by locality:', localidad)
@@ -65,6 +70,7 @@ export default function NinosPage() {
       const { data: ultimasPruebas } = await (supabase as any)
         .from('Prueba_pre_prunape')
         .select('idniño, Fecha, formulario')
+        .eq('anulada', false)
         .order('Fecha', { ascending: false })
 
       const ultimaPruebaMap: Record<number, { fecha: string; formulario: string | null }> = {}
@@ -93,7 +99,7 @@ export default function NinosPage() {
       }
 
       console.log('NinosPage: Supabase query returned', ninosData?.length, 'children')
-      return (ninosData || []).map((item) => {
+      return ((ninosData || []) as any[]).map((item) => {
         const fullNombre = (item.nombre || '').trim()
         const nameParts = fullNombre.split(' ')
         const nombre = nameParts[0] || 'Sin nombre'
@@ -110,6 +116,9 @@ export default function NinosPage() {
           fechaNacimiento: item.fecha_nacimiento || null,
           ultimaEvaluacion: ultima?.fecha || item.ultEvaluacion || null,
           formularioUltima: ultima?.formulario || null,
+          anulado: !!item.anulado,
+          anuladoMotivo: item.anulado_motivo || null,
+          anuladoAt: item.anulado_at || null,
           seguimiento: followUpMap[item.idninos] || null
         }
       })
@@ -163,11 +172,12 @@ export default function NinosPage() {
 
   const activeList: Ninya[] = (ninos || []).map((n) => ({
     ...n,
-    requierePrunape: prunapeIds.has(n.id),
+    requierePrunape: !n.anulado && prunapeIds.has(n.id),
   }))
 
   // Filter children based on live search + alerta toggle
   const filteredList = activeList.filter((nino) => {
+    if (nino.anulado !== (vista === 'anulados')) return false
     if (soloAlerta && !nino.requierePrunape) return false
     const fullName = `${nino.nombre} ${nino.apellido}`.toLowerCase()
     const dni = nino.dni.toLowerCase()
@@ -177,7 +187,8 @@ export default function NinosPage() {
   })
 
   // Stats from real data
-  const totalNNyA = activeList.length
+  const totalNNyA = activeList.filter((n) => !n.anulado).length
+  const totalAnulados = activeList.filter((n) => n.anulado).length
   const approvedNNyA = stats?.aprobados ?? 0
   const rejectedNNyA = stats?.noAprobados ?? 0
   const pendingTests = stats?.pendientes ?? 0
@@ -303,6 +314,26 @@ export default function NinosPage() {
         </button>
       </section>
 
+      {/* Pestañas: activos / anulados */}
+      <div className="flex gap-2 border-b border-outline-variant/40">
+        <button
+          onClick={() => { setVista('activos'); setCurrentPage(1) }}
+          className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors ${
+            vista === 'activos' ? 'border-primary text-primary' : 'border-transparent text-on-surface-variant hover:text-primary'
+          }`}
+        >
+          Activos ({totalNNyA})
+        </button>
+        <button
+          onClick={() => { setVista('anulados'); setSoloAlerta(false); setCurrentPage(1) }}
+          className={`px-4 py-2.5 text-sm font-semibold border-b-2 -mb-px transition-colors ${
+            vista === 'anulados' ? 'border-red-500 text-red-600' : 'border-transparent text-on-surface-variant hover:text-red-600'
+          }`}
+        >
+          Anulados ({totalAnulados})
+        </button>
+      </div>
+
       {/* Search & Filters */}
       <section className="flex flex-col sm:flex-row gap-3 sm:items-center">
         <div className="relative flex-1">
@@ -352,6 +383,11 @@ export default function NinosPage() {
                     </span>
                   )}
                 </div>
+                {nino.anulado && (
+                  <p className="text-xs text-red-700 bg-red-50 border border-red-100 rounded-lg px-2 py-1">
+                    <strong>Anulado</strong>{nino.anuladoMotivo ? `: ${nino.anuladoMotivo}` : ''}
+                  </p>
+                )}
                 {(nino.requierePrunape || nino.seguimiento) && (
                   <div className="flex flex-wrap gap-2">
                     {nino.requierePrunape && (
@@ -421,6 +457,11 @@ export default function NinosPage() {
                     <td className="px-6 py-4 text-sm text-on-surface font-semibold">
                       <div className="flex flex-wrap items-center gap-2">
                         <span>{nino.apellido}, {nino.nombre}</span>
+                        {nino.anulado && (
+                          <span className="inline-flex items-center gap-1 bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0">
+                            Anulado
+                          </span>
+                        )}
                         {nino.requierePrunape && (
                           <span className="inline-flex items-center gap-1 bg-violet-100 text-violet-700 border border-violet-200 px-2 py-0.5 rounded-full text-[10px] font-extrabold shrink-0" title="Requiere iniciar PRUNAPE">
                             <Stethoscope className="h-3 w-3" />
@@ -437,6 +478,9 @@ export default function NinosPage() {
                           </span>
                         )}
                       </div>
+                      {nino.anulado && nino.anuladoMotivo && (
+                        <p className="mt-1 text-xs font-normal text-red-700">Motivo: {nino.anuladoMotivo}</p>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-on-surface-variant text-center font-mono">
                       {nino.dni || '—'}

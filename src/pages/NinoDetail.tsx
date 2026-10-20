@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
+import { useUserRole } from '../hooks/useUserRole'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import { formatDate } from '../lib/utils'
@@ -14,7 +15,6 @@ import {
   CheckCircle2,
   XCircle,
   Plus,
-  Trash2,
   Eye,
   BookOpen,
   ChevronRight,
@@ -26,7 +26,9 @@ import {
   Link2,
   Globe,
   Languages,
-  Printer
+  Printer,
+  Ban,
+  RotateCcw
 } from 'lucide-react'
 import SeguimientoPrunape from '../components/SeguimientoPrunape'
 import { FormularioHogar, useHogar } from '../features/hogar'
@@ -51,6 +53,9 @@ interface NinoData {
   otrasCaracteristicas: string
   origenFamilia: string
   otroIdioma: string
+  anulado: boolean
+  anuladoMotivo: string
+  anuladoAt: string
 
   // Adult fields
   adultId: number | null
@@ -74,6 +79,9 @@ interface PruebaData {
   observacion: string
   espCuidado: string
   direccionEspCui: string
+  anulada: boolean
+  anuladaMotivo: string
+  anuladaAt: string
 }
 
 // Age calculator helper
@@ -192,6 +200,9 @@ export default function NinoDetailPage() {
   const { id } = useParams<{ id: string }>()
   const idninos = Number(id)
   const queryClient = useQueryClient()
+  const { canEditNinos } = useUserRole()
+  const [showAnular, setShowAnular] = useState(false)
+  const [motivoAnular, setMotivoAnular] = useState('')
 
   // Evaluation Detail Modal and Selection
   const [selectedPruebaId, setSelectedPruebaId] = useState<number | null>(null)
@@ -314,38 +325,8 @@ export default function NinoDetailPage() {
     }
   })
 
-  // Delete Evaluation Mutation
-  const deletePruebaMutation = useMutation({
-    mutationFn: async (idPrueba: number) => {
-      // First, delete answers associated with this evaluation in pregunta_list
-      const { error: answersError } = await supabase
-        .from('pregunta_list')
-        .delete()
-        .eq('id_ingresoform', idPrueba)
-      if (answersError) throw answersError
-
-      // Then delete the evaluation itself
-      const { error: pruebaError } = await supabase
-        .from('Prueba_pre_prunape')
-        .delete()
-        .eq('id_prueba', idPrueba)
-      if (pruebaError) throw pruebaError
-    },
-    onSuccess: () => {
-      toast.success('¡Evaluación eliminada con éxito!')
-      queryClient.invalidateQueries({ queryKey: ['pruebas', id] })
-    },
-    onError: (err: any) => {
-      console.error(err)
-      toast.error(err.message || 'Error al eliminar la evaluación.')
-    }
-  })
-
-  const handleDeletePrueba = (idPrueba: number) => {
-    if (window.confirm('¿Está seguro de que desea eliminar esta evaluación y todas sus respuestas?')) {
-      deletePruebaMutation.mutate(idPrueba)
-    }
-  }
+  // Las evaluaciones NO se borran de la base: queda pendiente la anulación suave
+  // (mismo esquema que niños). Hasta entonces no hay botón de eliminar.
 
   // PDF export state
   const [isPdfLoading, setIsPdfLoading] = useState(false)
@@ -356,11 +337,11 @@ export default function NinoDetailPage() {
   }> | null>(null)
 
   const handleExportPdf = async () => {
-    if (!activePruebas.length) return
+    if (!validPruebas.length) return
     setIsPdfLoading(true)
     try {
       const results = await Promise.all(
-        activePruebas.map(async (prueba) => {
+        validPruebas.map(async (prueba) => {
           const { data: pruebaRaw } = await supabase
             .from('Prueba_pre_prunape')
             .select('*')
@@ -665,6 +646,9 @@ export default function NinoDetailPage() {
         otrasCaracteristicas: data.otras_características || '',
         origenFamilia: data.origen_familia || '',
         otroIdioma: data.otro_idioma || '',
+        anulado: !!(data as any).anulado,
+        anuladoMotivo: (data as any).anulado_motivo || '',
+        anuladoAt: (data as any).anulado_at || '',
 
         // Adult columns
         adultId: data.idAdulto || adultData?.id || null,
@@ -681,15 +665,94 @@ export default function NinoDetailPage() {
     },
   })
 
+  // Anulación suave: se hace por RPC (valida rol, exige motivo y deja historial)
+  const invalidarNino = () => {
+    queryClient.invalidateQueries({ queryKey: ['nino', id] })
+    queryClient.invalidateQueries({ queryKey: ['ninos'] })
+  }
+
+  const anularMutation = useMutation({
+    mutationFn: async (motivo: string) => {
+      const { error } = await (supabase as any).rpc('anular_nino', { p_id: idninos, p_motivo: motivo })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success('Niño/a anulado/a. Se conserva toda su información.')
+      setShowAnular(false)
+      setMotivoAnular('')
+      invalidarNino()
+    },
+    onError: (err: any) => {
+      console.error(err)
+      toast.error(err.message || 'No se pudo anular al niño/a.')
+    }
+  })
+
+  const restaurarMutation = useMutation({
+    mutationFn: async () => {
+      const { error } = await (supabase as any).rpc('restaurar_nino', { p_id: idninos })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success('Niño/a restaurado/a.')
+      invalidarNino()
+    },
+    onError: (err: any) => {
+      console.error(err)
+      toast.error(err.message || 'No se pudo restaurar al niño/a.')
+    }
+  })
+
+  // Anulación suave de evaluaciones (RPC: valida rol, exige motivo y deja historial)
+  const [anularPruebaId, setAnularPruebaId] = useState<number | null>(null)
+  const [motivoPrueba, setMotivoPrueba] = useState('')
+
+  const invalidarPruebas = () => {
+    queryClient.invalidateQueries({ queryKey: ['pruebas', id] })
+    queryClient.invalidateQueries({ queryKey: ['ninos'] })
+  }
+
+  const anularPruebaMutation = useMutation({
+    mutationFn: async ({ idPrueba, motivo }: { idPrueba: number; motivo: string }) => {
+      const { error } = await (supabase as any).rpc('anular_prueba', { p_id: idPrueba, p_motivo: motivo })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success('Evaluación anulada. Se conservan todas sus respuestas.')
+      setAnularPruebaId(null)
+      setMotivoPrueba('')
+      invalidarPruebas()
+    },
+    onError: (err: any) => {
+      console.error(err)
+      toast.error(err.message || 'No se pudo anular la evaluación.')
+    }
+  })
+
+  const restaurarPruebaMutation = useMutation({
+    mutationFn: async (idPrueba: number) => {
+      const { error } = await (supabase as any).rpc('restaurar_prueba', { p_id: idPrueba })
+      if (error) throw error
+    },
+    onSuccess: () => {
+      toast.success('Evaluación restaurada.')
+      invalidarPruebas()
+    },
+    onError: (err: any) => {
+      console.error(err)
+      toast.error(err.message || 'No se pudo restaurar la evaluación.')
+    }
+  })
+
   // Fetch evaluations
   const { data: pruebas, isLoading: isLoadingPruebas } = useQuery<PruebaData[]>({
     queryKey: ['pruebas', id],
     queryFn: async () => {
       if (isNaN(idninos)) return []
 
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('Prueba_pre_prunape')
-        .select('id_prueba, Fecha, Aprobado, Observacion, fechanacimiento, formulario, espCuidado, direccionEspCui')
+        .select('id_prueba, Fecha, Aprobado, Observacion, fechanacimiento, formulario, espCuidado, direccionEspCui, anulada, anulada_motivo, anulada_at')
         .eq('idniño', idninos)
 
       if (error) {
@@ -697,7 +760,7 @@ export default function NinoDetailPage() {
         return []
       }
 
-      return (data || []).map((item) => {
+      return ((data || []) as any[]).map((item) => {
         const birthDate = item.fechanacimiento || ''
         const testDate = item.Fecha || ''
 
@@ -725,6 +788,9 @@ export default function NinoDetailPage() {
           observacion: item.Observacion || 'Sin observación registrada.',
           espCuidado: item.espCuidado || 'No registrado',
           direccionEspCui: item.direccionEspCui || '',
+          anulada: !!item.anulada,
+          anuladaMotivo: item.anulada_motivo || '',
+          anuladaAt: item.anulada_at || '',
         }
       })
     },
@@ -922,6 +988,8 @@ export default function NinoDetailPage() {
 
   const activeNino = nino ?? null
   const activePruebas = pruebas ?? []
+  // Las evaluaciones anuladas se muestran en el historial pero no cuentan en totales, PDF ni observaciones
+  const validPruebas = activePruebas.filter((p) => !p.anulada)
 
   if (isLoadingNino || isLoadingPruebas) {
     return (
@@ -942,9 +1010,9 @@ export default function NinoDetailPage() {
     )
   }
 
-  const totalEvaluations = activePruebas.length
-  const approvedEvaluations = activePruebas.filter((p) => p.aprobado === 'Aprobado').length
-  const unapprovedEvaluations = activePruebas.filter((p) => p.aprobado === 'No Aprobado').length
+  const totalEvaluations = validPruebas.length
+  const approvedEvaluations = validPruebas.filter((p) => p.aprobado === 'Aprobado').length
+  const unapprovedEvaluations = validPruebas.filter((p) => p.aprobado === 'No Aprobado').length
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-[1200px] mx-auto w-full space-y-6">
@@ -958,6 +1026,131 @@ export default function NinoDetailPage() {
           {activeNino.apellido}, {activeNino.nombre}
         </span>
       </nav>
+
+      {/* Aviso de niño/a anulado/a */}
+      {activeNino.anulado && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl border border-red-200 bg-red-50 p-4">
+          <div className="flex items-start gap-3">
+            <Ban className="h-5 w-5 text-red-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-red-800">Niño/a anulado/a</p>
+              <p className="text-xs text-red-700 mt-0.5">
+                Motivo: {activeNino.anuladoMotivo || '—'}
+                {activeNino.anuladoAt && <> · {formatDate(activeNino.anuladoAt.slice(0, 10))}</>}
+              </p>
+              <p className="text-xs text-red-600/80 mt-0.5">No se cuenta en dashboards ni indicadores. Toda su información se conserva.</p>
+            </div>
+          </div>
+          {canEditNinos && (
+            <button
+              onClick={() => {
+                if (window.confirm('¿Restaurar a este niño/a? Volverá a contarse en dashboards e indicadores.')) {
+                  restaurarMutation.mutate()
+                }
+              }}
+              disabled={restaurarMutation.isPending}
+              className="flex items-center justify-center gap-1.5 px-4 py-2 bg-white hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-semibold transition-all active:scale-95 disabled:opacity-50"
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              Restaurar
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Modal: anular niño/a */}
+      {showAnular && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => !anularMutation.isPending && setShowAnular(false)}
+        >
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-on-surface font-display flex items-center gap-2">
+              <Ban className="h-5 w-5 text-red-600" /> Anular niño/a
+            </h3>
+            <p className="mt-2 text-sm text-on-surface-variant">
+              <strong>{activeNino.nombre} {activeNino.apellido}</strong> dejará de contarse en dashboards e indicadores y pasará a la pestaña
+              &quot;Anulados&quot;. <strong>No se borra ningún dato</strong> y se puede restaurar.
+            </p>
+            <label className="mt-4 block text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="motivo-anulacion">
+              Motivo de la anulación *
+            </label>
+            <textarea
+              id="motivo-anulacion"
+              value={motivoAnular}
+              onChange={(e) => setMotivoAnular(e.target.value)}
+              rows={3}
+              maxLength={300}
+              placeholder="Ej: registro duplicado, carga errónea, se mudó fuera de la provincia…"
+              className="mt-1 w-full rounded-xl border border-outline-variant bg-white p-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={() => setShowAnular(false)}
+                disabled={anularMutation.isPending}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-slate-100"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => anularMutation.mutate(motivoAnular.trim())}
+                disabled={anularMutation.isPending || motivoAnular.trim().length === 0}
+                className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                {anularMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                Anular
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: anular evaluación */}
+      {anularPruebaId !== null && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+          onClick={() => !anularPruebaMutation.isPending && setAnularPruebaId(null)}
+        >
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-bold text-on-surface font-display flex items-center gap-2">
+              <Ban className="h-5 w-5 text-red-600" /> Anular evaluación
+            </h3>
+            <p className="mt-2 text-sm text-on-surface-variant">
+              La evaluación dejará de contarse en dashboards, indicadores y en la última evaluación del niño/a.
+              <strong> No se borra ningún dato ni respuesta</strong> y se puede restaurar.
+            </p>
+            <label className="mt-4 block text-xs font-bold uppercase tracking-wider text-slate-500" htmlFor="motivo-anulacion-prueba">
+              Motivo de la anulación *
+            </label>
+            <textarea
+              id="motivo-anulacion-prueba"
+              value={motivoPrueba}
+              onChange={(e) => setMotivoPrueba(e.target.value)}
+              rows={3}
+              maxLength={300}
+              placeholder="Ej: cargada en el niño/a equivocado, evaluación duplicada, error de carga…"
+              className="mt-1 w-full rounded-xl border border-outline-variant bg-white p-3 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"
+            />
+            <div className="mt-5 flex justify-end gap-3">
+              <button
+                onClick={() => setAnularPruebaId(null)}
+                disabled={anularPruebaMutation.isPending}
+                className="px-4 py-2 rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-slate-100"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => anularPruebaMutation.mutate({ idPrueba: anularPruebaId, motivo: motivoPrueba.trim() })}
+                disabled={anularPruebaMutation.isPending || motivoPrueba.trim().length === 0}
+                className="px-4 py-2 rounded-xl text-sm font-semibold bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5"
+              >
+                {anularPruebaMutation.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+                Anular
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Bento Grid */}
       <div className="grid grid-cols-12 gap-6">
@@ -988,13 +1181,26 @@ export default function NinoDetailPage() {
                   DNI {activeNino.dni}
                 </p>
               </div>
-              <button
-                onClick={handleOpenEdit}
-                className="flex items-center gap-1 px-4 py-1.5 bg-slate-50 hover:bg-slate-100 text-primary border border-outline-variant/30 rounded-lg transition-all active:scale-95 text-xs font-semibold"
-              >
-                <Edit className="h-3.5 w-3.5" />
-                Editar
-              </button>
+              <div className="flex items-center gap-2">
+                {!activeNino.anulado && (
+                  <button
+                    onClick={handleOpenEdit}
+                    className="flex items-center gap-1 px-4 py-1.5 bg-slate-50 hover:bg-slate-100 text-primary border border-outline-variant/30 rounded-lg transition-all active:scale-95 text-xs font-semibold"
+                  >
+                    <Edit className="h-3.5 w-3.5" />
+                    Editar
+                  </button>
+                )}
+                {canEditNinos && !activeNino.anulado && (
+                  <button
+                    onClick={() => setShowAnular(true)}
+                    className="flex items-center gap-1 px-3 py-1.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-lg transition-all active:scale-95 text-xs font-semibold"
+                  >
+                    <Ban className="h-3.5 w-3.5" />
+                    Anular
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-y-4 gap-x-6">
@@ -1094,16 +1300,18 @@ export default function NinoDetailPage() {
                 {totalEvaluations} {totalEvaluations === 1 ? 'REGISTRO' : 'REGISTROS'}
               </span>
             </div>
-            <Link
-              to={`/ninos/${id}/nueva-prueba`}
-              className="bg-primary hover:bg-primary-container text-on-primary px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
-            >
-              <Plus className="h-4 w-4" />
-              Agregar Prueba
-            </Link>
+            {!activeNino.anulado && (
+              <Link
+                to={`/ninos/${id}/nueva-prueba`}
+                className="bg-primary hover:bg-primary-container text-on-primary px-5 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all shadow-sm"
+              >
+                <Plus className="h-4 w-4" />
+                Agregar Prueba
+              </Link>
+            )}
             <button
               onClick={handleExportPdf}
-              disabled={isPdfLoading || activePruebas.length === 0}
+              disabled={isPdfLoading || validPruebas.length === 0}
               className="px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isPdfLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
@@ -1125,7 +1333,7 @@ export default function NinoDetailPage() {
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {activePruebas.map((prueba, index) => (
-                  <tr key={prueba.id_prueba || index} className="hover:bg-slate-50 transition-colors">
+                  <tr key={prueba.id_prueba || index} className={`hover:bg-slate-50 transition-colors ${prueba.anulada ? 'bg-red-50/40' : ''}`}>
                     <td className="px-6 py-4 pl-8">
                       <div className="flex items-center gap-3">
                         <div className="w-1.5 h-6 bg-primary rounded-full"></div>
@@ -1138,6 +1346,16 @@ export default function NinoDetailPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
+                      {prueba.anulada && (
+                        <div className="mb-1">
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-red-100 text-red-700 border border-red-200">
+                            <Ban className="h-3 w-3" /> Anulada
+                          </span>
+                          {prueba.anuladaMotivo && (
+                            <p className="mt-0.5 text-[11px] text-red-700 max-w-[200px]">Motivo: {prueba.anuladaMotivo}</p>
+                          )}
+                        </div>
+                      )}
                       {prueba.aprobado === 'Aprobado' ? (
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600">
                           Aprobado
@@ -1167,13 +1385,31 @@ export default function NinoDetailPage() {
                           <Eye className="h-3.5 w-3.5" />
                           Ver Detalle
                         </button>
-                        <button
-                          onClick={() => handleDeletePrueba(prueba.id_prueba)}
-                          disabled={deletePruebaMutation.isPending}
-                          className="w-8 h-8 flex items-center justify-center text-red-500 hover:bg-red-50 rounded-full transition-colors disabled:opacity-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        {canEditNinos && !prueba.anulada && !activeNino.anulado && (
+                          <button
+                            onClick={() => setAnularPruebaId(prueba.id_prueba)}
+                            title="Anular evaluación"
+                            className="flex items-center gap-1 px-3 py-1 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-full transition-all active:scale-95 text-xs font-semibold"
+                          >
+                            <Ban className="h-3.5 w-3.5" />
+                            Anular
+                          </button>
+                        )}
+                        {canEditNinos && prueba.anulada && (
+                          <button
+                            onClick={() => {
+                              if (window.confirm('¿Restaurar esta evaluación? Volverá a contarse en dashboards e indicadores.')) {
+                                restaurarPruebaMutation.mutate(prueba.id_prueba)
+                              }
+                            }}
+                            disabled={restaurarPruebaMutation.isPending}
+                            title="Restaurar evaluación"
+                            className="flex items-center gap-1 px-3 py-1 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-full transition-all active:scale-95 text-xs font-semibold disabled:opacity-50"
+                          >
+                            <RotateCcw className="h-3.5 w-3.5" />
+                            Restaurar
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -1190,7 +1426,7 @@ export default function NinoDetailPage() {
             Observaciones Médicas
           </h4>
           <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-thin">
-            {activePruebas.map((prueba, index) => (
+            {validPruebas.map((prueba, index) => (
               <div key={index} className="min-w-[320px] max-w-[350px] p-4 bg-slate-50 rounded-xl border border-outline-variant/20 flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start mb-2">
@@ -1203,7 +1439,7 @@ export default function NinoDetailPage() {
                 </div>
               </div>
             ))}
-            {activePruebas.length === 0 && (
+            {validPruebas.length === 0 && (
               <p className="text-sm text-on-surface-variant py-2">Sin observaciones registradas.</p>
             )}
           </div>

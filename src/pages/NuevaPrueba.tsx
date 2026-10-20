@@ -455,6 +455,22 @@ export default function NuevaPruebaPage() {
     )
   }
 
+  // Un niño/a anulado/a no puede recibir nuevas evaluaciones
+  if ((nino as any).anulado) {
+    return (
+      <div className="p-8 max-w-md mx-auto text-center mt-20 bg-white rounded-2xl shadow-sm border">
+        <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+        <p className="text-sm font-semibold text-on-surface mb-1">Este niño/a está anulado/a</p>
+        <p className="text-secondary text-sm mb-6">
+          No se pueden registrar nuevas evaluaciones. Un coordinador o administrador puede restaurarlo desde su perfil.
+        </p>
+        <Link to={`/ninos/${id}`} className="inline-flex items-center gap-1.5 bg-primary text-on-primary px-6 py-2 rounded-full text-xs font-semibold">
+          <ArrowLeft className="h-4 w-4" /> Volver al perfil
+        </Link>
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 md:p-10 max-w-[1000px] mx-auto w-full space-y-6 bg-[#f7f9fb] min-h-screen">
       {/* Lightbox modal */}
