@@ -88,6 +88,14 @@ function App() {
           console.log('onAuthStateChange: Skipped INITIAL_SESSION event')
           return
         }
+
+        // Password recovery flow — redirect to update-password page
+        if (event === 'PASSWORD_RECOVERY') {
+          console.log('onAuthStateChange: Password recovery detected, redirecting to update-password')
+          window.location.hash = '' // Clean the hash to avoid reprocessing
+          window.location.href = '/update-password'
+          return
+        }
         
         try {
           if (session) {
