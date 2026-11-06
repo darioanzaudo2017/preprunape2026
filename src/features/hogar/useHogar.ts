@@ -3,7 +3,8 @@ import { supabase } from '../../lib/supabase';
 import type { FormularioHogarData } from './hogar.types';
 import { toast } from 'sonner';
 
-export function useHogar(idNino: number) {
+// `enabled` permite apagar las consultas (por defecto siguen activas como siempre).
+export function useHogar(idNino: number, enabled: boolean = true) {
   const queryClient = useQueryClient();
 
   // 1. Fetch info de localidad para el select
@@ -17,6 +18,7 @@ export function useHogar(idNino: number) {
       if (error) throw error;
       return (data || []).map((row) => row.Localidad as string);
     },
+    enabled,
   });
 
   // 2. Fetch de adultos para poder seleccionar el jefe de hogar
@@ -30,6 +32,7 @@ export function useHogar(idNino: number) {
       if (error) throw error;
       return data || [];
     },
+    enabled,
   });
 
   // 3. Obtener el hogar actual del niño y su último snapshot
@@ -77,7 +80,7 @@ export function useHogar(idNino: number) {
         idHogar,
       };
     },
-    enabled: !!idNino && !isNaN(idNino),
+    enabled: enabled && !!idNino && !isNaN(idNino),
   });
 
   // 4. Mutation para guardar (crear nuevo hogar o actualizar snapshot de hogar existente)

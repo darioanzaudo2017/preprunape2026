@@ -33,6 +33,11 @@ import {
 import SeguimientoPrunape from '../components/SeguimientoPrunape'
 import { FormularioHogar, useHogar } from '../features/hogar'
 
+// Contexto socioeconómico y habitacional (datos del hogar + link de encuesta para el adulto).
+// Oculto por decisión del 2026-11-05 hasta definir quién puede ver esos datos por localidad.
+// Para volver a mostrarlo alcanza con poner esta constante en true.
+const MOSTRAR_CONTEXTO_HOGAR = false
+
 // Define data interface
 interface NinoData {
   id: string
@@ -478,7 +483,7 @@ export default function NinoDetailPage() {
 
   // Hogar hook and modal state
   const [isHogarModalOpen, setIsHogarModalOpen] = useState(false)
-  const { hogarData, isLoading: isLoadingHogar } = useHogar(idninos)
+  const { hogarData, isLoading: isLoadingHogar } = useHogar(idninos, MOSTRAR_CONTEXTO_HOGAR)
 
   // Link generation state
   const [isGeneratingLink, setIsGeneratingLink] = useState(false)
@@ -1445,7 +1450,8 @@ export default function NinoDetailPage() {
           </div>
         </div>
 
-        {/* Contexto Socioeconómico y Habitacional (Hogar) */}
+        {/* Contexto Socioeconómico y Habitacional (Hogar) — oculto mientras MOSTRAR_CONTEXTO_HOGAR sea false */}
+        {MOSTRAR_CONTEXTO_HOGAR && (
         <div className="col-span-12">
           {isLoadingHogar ? (
             <div className="bg-white rounded-2xl border border-outline-variant/30 p-6 shadow-sm flex items-center justify-center py-12">
@@ -1593,6 +1599,7 @@ export default function NinoDetailPage() {
             </div>
           )}
         </div>
+        )}
 
         {/* Seguimiento PRUNAPE Form Section */}
         <div className="col-span-12">
@@ -1606,7 +1613,7 @@ export default function NinoDetailPage() {
       </div>
 
       {/* --- HOGAR FORM MODAL DIALOG --- */}
-      {isHogarModalOpen && (
+      {MOSTRAR_CONTEXTO_HOGAR && isHogarModalOpen && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 z-50 animate-fade-in">
           <div className="bg-white rounded-2xl shadow-xl border border-outline-variant/30 max-w-4xl w-full overflow-hidden animate-scale-up flex flex-col max-h-[90vh]">
             <div className="overflow-y-auto flex-1">
